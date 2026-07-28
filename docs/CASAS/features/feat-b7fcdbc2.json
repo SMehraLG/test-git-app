@@ -1,0 +1,959 @@
+{
+  "feature_id": "feat-b7fcdbc2",
+  "plan": {
+    "doc": {
+      "applied_standards": [
+        {
+          "discipline": "data_and_storage",
+          "enforces": [
+            "Every BigQuery query aggregating connectivity measurements must include a mandatory operator/market tenant filter derived from the authenticated request context (not the caller-supplied customer_id), so cross-OpCo measurement data can never be accessed in a single query"
+          ],
+          "evidence": "C003 Authoritative Database Pattern mandates per-operator data isolation for all new microservices; ADR-C020 v2 confirms CNX uses per-OpCo physical isolation; multi-tenancy principle requires country+operator+brand filtering on all data.",
+          "severity": "must",
+          "standard_id": "00c0c2e9-da3a-41b8-9903-c2e5b77f4043"
+        },
+        {
+          "discipline": "data_and_storage",
+          "enforces": [
+            "The BigQuery aggregation query for the 30-day measurement window must use a _PARTITIONTIME or equivalent partition-pruning predicate against the day-partitioned connectivity_metrics fact tables to avoid full-table scans and satisfy the p95 < 1s response-time budget"
+          ],
+          "evidence": "Horizon v2 - Connectivity Service documents that all 11 connectivity_metrics BigQuery tables are partitioned by day; unpartitioned scans over a 30-day window would violate the p95 SLA.",
+          "severity": "must",
+          "standard_id": "e807a967-3cf6-4ff1-a865-f954621298ae"
+        },
+        {
+          "discipline": "data_and_storage",
+          "enforces": [
+            "The BigQuery SELECT list and the API response DTO must project only aggregate/derived columns (weighted score, per-metric sub-scores, measurement counts, window bounds, customer_id echo) - raw measurement records, probe identifiers, device IDs, and internal operator identifiers must be excluded from both the query result and the response payload"
+          ],
+          "evidence": "Horizon v2 - Common Patterns states Connectivity carries no PII in probe data and mandates PII handling per service; spec outcomes 13-14 require data minimisation and opaque customer_id; GDPR-data-minimisation constraint applies.",
+          "severity": "must",
+          "standard_id": "7fa65394-8a57-4f40-8d6b-24e0db39b21f"
+        },
+        {
+          "discipline": "data_and_storage",
+          "enforces": [
+            "The operator/market context used to scope the BigQuery query must be sourced exclusively from the authenticated request token (the API key OpCo binding per ADR-C020 v2), never from the caller-supplied customer_id path parameter, so a customer_id collision across OpCos cannot resolve another operator's data"
+          ],
+          "evidence": "ADR-C020 v2 specifies per-OpCo instances with namespace per OpCo and OpCo-keyed credentials as the physical isolation mechanism; spec outcome 12 requires resolution to the requester's own operator/market context.",
+          "severity": "must",
+          "standard_id": "5c2842c1-5948-4b0a-94c8-758dbafa1b42"
+        },
+        {
+          "discipline": "data_and_storage",
+          "enforces": [
+            "The plan must document that the customer_id accepted in the path parameter is treated as an opaque measurement-lookup token and is never joined or resolved against an internal operator customer identity table - no TCId or internal identifier resolution is performed by the score query"
+          ],
+          "evidence": "Connectivity Architect principles state TCId abstraction must never expose operator customer IDs to third parties; spec out-of-scope confirms no external identity resolution, but the plan must make the data access pattern explicit.",
+          "severity": "should",
+          "standard_id": "28b99619-8130-4715-b3c4-44918fcd6f24"
+        },
+        {
+          "discipline": "infra_and_deploy",
+          "enforces": [
+            "Deploy new connectivity-score endpoint via the Horizon v2 GitHub Actions canary rollout: build image tagged with commit SHA, resolve immutable digest, deploy at 0% traffic, promote 10%->50%->100% with /health smoke-test gates, auto-rollback to previous revision on any smoke-test failure"
+          ],
+          "evidence": "Nugget ba2baa92 from 'Horizon v2 - Common Patterns' (casas-horizon-v2/docs/patterns.md) mandates the canary rollout as the standard deployment strategy for all Horizon v2 services including Connectivity.",
+          "severity": "must",
+          "standard_id": "ba2baa92-726e-4348-848e-cba81e86f6d0"
+        },
+        {
+          "discipline": "infra_and_deploy",
+          "enforces": [
+            "All infrastructure changes for the new endpoint (Cloud Run config, scaling parameters, env vars, secret references) must be expressed as Terraform in services/connectivity/infra/ using the shared Terraform modules convention - no manual infra changes permitted"
+          ],
+          "evidence": "Nugget 48093441 from 'casas-architecture/docs/0-architecture-governance/BUILD-GUIDELINES.md' mandates all MVE infrastructure as IaC in Git with no manual changes and shared Terraform module layout.",
+          "severity": "must",
+          "standard_id": "48093441-aec0-43ae-9963-df83df5016ac"
+        },
+        {
+          "discipline": "infra_and_deploy",
+          "enforces": [
+            "CI/CD workflow must authenticate to GCP via Workload Identity Federation (GitHub Actions -> WIF -> casas-deployer SA) with no service-account key files; image tagged with git SHA pushed to Artifact Registry at europe-west2-docker.pkg.dev"
+          ],
+          "evidence": "Nugget 1fdafb14 from 'Horizon v2 - Architecture Overview' (casas-horizon-v2/docs/architecture.md) establishes WIF keyless auth and Artifact Registry as the mandatory GCP auth and image registry pattern for all three Horizon v2 services.",
+          "severity": "must",
+          "standard_id": "1fdafb14-c053-417c-bfb7-d02f857850a4"
+        },
+        {
+          "discipline": "infra_and_deploy",
+          "enforces": [
+            "Connectivity service must expose GET /health (liveness, always 200 {status: ok}) and GET /ready (readiness, checks BigQuery/backend dependencies, returns 503 if unhealthy) used by Cloud Run for traffic routing and as the canary smoke-test target"
+          ],
+          "evidence": "Nugget 391a1e79 from 'Horizon v2 - Common Patterns' (casas-horizon-v2/docs/patterns.md) mandates both /health and /ready probes on every Horizon v2 service for Cloud Run lifecycle management.",
+          "severity": "must",
+          "standard_id": "391a1e79-7216-4650-b36c-172cf4224ccc"
+        },
+        {
+          "discipline": "infra_and_deploy",
+          "enforces": [
+            "New endpoint must emit structlog GCP Cloud Logging JSON with trace IDs (Cloud Trace correlation) and request metadata (method, path, status, latency); OpenTelemetry tracing to Cloud Trace; Connectivity metrics surface via BigQuery-based analytics (not Prometheus)"
+          ],
+          "evidence": "Nugget d57b7c38 from 'Horizon v2 - Common Patterns' (casas-horizon-v2/docs/patterns.md) defines the shared observability standard for all Horizon v2 services and explicitly notes Connectivity relies on BigQuery-based analytics rather than a Prometheus endpoint.",
+          "severity": "must",
+          "standard_id": "d57b7c38-094e-4085-836b-ebe4aaf86d11"
+        },
+        {
+          "discipline": "infra_and_deploy",
+          "enforces": [
+            "Plan must include a validated rollback procedure: previous image digest accessible in Artifact Registry, rollback trigger criteria defined (e.g. error rate >1%, p99 >2s), designated rollback owner, estimated rollback time <15 minutes, rollback tested in dev/staging before prod"
+          ],
+          "evidence": "Nugget 9ab16b74 from 'casas-architecture/docs/0-architecture-governance/BUILD-GUIDELINES.md' mandates a validated rollback checklist for every MVE deployment including rollback-tested-in-staging and <15-minute target.",
+          "severity": "must",
+          "standard_id": "9ab16b74-5bd3-4425-935c-e57829ff5f7b"
+        },
+        {
+          "discipline": "infra_and_deploy",
+          "enforces": [
+            "CI/CD pipeline for the connectivity-score endpoint must use per-service path filtering in .github/workflows/ so only the connectivity service rebuilds and redeploys on a push to services/connectivity/"
+          ],
+          "evidence": "Nugget d8208e76 from 'Horizon v2 - Repository Overview' (casas-horizon-v2/README.md) mandates unified pipelines with per-service path filtering as the standard CI/CD structure for the Horizon v2 monorepo.",
+          "severity": "must",
+          "standard_id": "d8208e76-df58-4aac-a9dc-bb7e68a7c061"
+        },
+        {
+          "discipline": "infra_and_deploy",
+          "enforces": [
+            "Secrets (app keys, MQTT credentials, any new API keys for the score endpoint) must be stored in GCP Secret Manager and injected at runtime as Cloud Run env vars - never committed to Git; config changes (env vars, scaling) must trigger a new immutable deployment, not in-place modification"
+          ],
+          "evidence": "Nugget 4bb04b26 from 'casas-architecture/docs/0-architecture-governance/BUILD-GUIDELINES.md' mandates secrets-separate-from-config, never-commit-secrets, and immutable deployments as BUILD-GUIDELINES config management principles.",
+          "severity": "must",
+          "standard_id": "4bb04b26-0c48-4d2c-9479-161a23abd4ae"
+        },
+        {
+          "discipline": "security",
+          "enforces": [
+            "All requests to the connectivity-score endpoint must be authenticated via the UC-C-004 API Gateway using OAuth 2.0 / OIDC (SR-004-01) and per-consumer token-based authorisation (SR-004-02) before the handler receives control",
+            "The plan must explicitly route the new endpoint through the gateway Auth Middleware component - no direct backend exposure"
+          ],
+          "evidence": "SR-004-01/02 (UC-C-004 connectivity API gateway functional requirements) mandate OAuth 2.0/OIDC authentication and per-consumer authorisation for all connectivity gateway endpoints; the spec requires the same auth regime as existing read endpoints.",
+          "severity": "must",
+          "standard_id": "6f4761a0-c6ac-4e58-b096-b516d5c3e687"
+        },
+        {
+          "discipline": "security",
+          "enforces": [
+            "The Connectivity service-side auth middleware must validate API keys using SHA-256 hashing with constant-time comparison before any handler logic executes",
+            "Plan must name the auth middleware module and the constant-time comparison function used"
+          ],
+          "evidence": "Horizon v2 - Common Patterns specifies Connectivity uses SHA-256-hashed API keys with constant-time comparison as its service-level auth method, the existing read-endpoint regime the spec requires this endpoint to inherit.",
+          "severity": "must",
+          "standard_id": "d28d3c2a-663f-4c0c-9493-b12ab271c434"
+        },
+        {
+          "discipline": "security",
+          "enforces": [
+            "The connectivity-score endpoint must inherit the Connectivity service token-bucket rate limiter scoped per-IP at 60 tokens with 10/s refill",
+            "Plan must confirm the rate-limiter middleware is applied to the new route with these parameters, or document a justified deviation"
+          ],
+          "evidence": "Horizon v2 - Common Patterns: shared security baseline mandates token-bucket rate limiting per service; Connectivity's parameters are 60 tokens / 10 s refill per IP.",
+          "severity": "must",
+          "standard_id": "792e5840-6a46-44cf-ba44-2e548e81ca65"
+        },
+        {
+          "discipline": "security",
+          "enforces": [
+            "The score handler must derive the operator context from the authenticated API key (per-OpCo key mapped to operator/market) and inject it as a mandatory filter on all database queries",
+            "No cross-operator measurement data may be reachable regardless of the customer_id path parameter value - isolation must be enforced query-side, not post-fetch"
+          ],
+          "evidence": "ADR-C020 v2 per-layer isolation model mandates K8s namespace per OpCo and scoped data access; operator routing via Apigee key; the spec outcome requires data belonging to another operator must never be returned.",
+          "severity": "must",
+          "standard_id": "5c2842c1-5948-4b0a-94c8-758dbafa1b42"
+        },
+        {
+          "discipline": "security",
+          "enforces": [
+            "Structured logs emitted by the score handler must redact or omit the customer_id value (PII) - structlog must be configured with a PII-redaction processor before the GCP Cloud Logging JSON sink",
+            "Non-root container execution must be confirmed for the Cloud Run deployment of this service"
+          ],
+          "evidence": "Horizon v2 - Common Patterns: shared security baseline requires PII redaction and non-root containers for all platform services; the score endpoint processes customer_id which is personal data under GDPR.",
+          "severity": "must",
+          "standard_id": "892743de-26d1-41e8-b2c3-dae3dc831a2a"
+        },
+        {
+          "discipline": "security",
+          "enforces": [
+            "The response serialiser must return only the derived/aggregate fields listed in the spec (score, status, sub-scores, counts, customer_id echo, window) and must actively strip any internal device identifiers, line IDs, or cross-operator identifiers before the response is returned",
+            "Plan must name the serialiser/schema layer and confirm no raw measurement fields or internal IDs are reachable via the response envelope"
+          ],
+          "evidence": "CNX API per-OpCo isolation nugget documents the layered auth model where internal IDs are not surfaced; the spec outcome requires the endpoint to leak no internal operator identifiers, device or line identifiers.",
+          "severity": "must",
+          "standard_id": "f746d9ef-1817-4853-b0f1-08fb7224c1d7"
+        },
+        {
+          "discipline": "security",
+          "enforces": [
+            "The plan must specify which per-OpCo OAuth provider configuration the score endpoint relies on - either confirming it inherits the gateway-level per-market OAuth config (CON-004-02) or documenting a justified alternative"
+          ],
+          "evidence": "CON-004-02 (UC-C-004 gateway constraints): the gateway must support per-OpCo OAuth provider integration because each market runs its own IdP; applicable because the score endpoint sits behind the same gateway.",
+          "severity": "should",
+          "standard_id": "88e0ec5e-c892-4ecd-9141-4ce249733a5a"
+        },
+        {
+          "discipline": "testing",
+          "enforces": [
+            "run uv run pytest --cov --cov-branch --cov-fail-under=80 in services/connectivity as the CI coverage gate",
+            "configure CI to fail the PR if branch coverage drops below 80% for the connectivity backend service"
+          ],
+          "evidence": "Horizon v2 - Repository Overview names services/connectivity/backend as a per-service directory where the 80% branch-coverage gate is enforced via uv run pytest --cov --cov-branch --cov-fail-under=80.",
+          "severity": "must",
+          "standard_id": "5ee87c4b-a0b5-4840-8c88-682aa436b98f"
+        },
+        {
+          "discipline": "testing",
+          "enforces": [
+            "use uv run pytest (not bare pytest) for all test invocations in the connectivity backend",
+            "lay out test files flat under tests/ with one concern per file (e.g. test_score.py)",
+            "mark integration tests with @pytest.mark.integration and exclude from the default uv run pytest run"
+          ],
+          "evidence": "CASAS Python testing conventions: uv run pytest convention, flat tests/ layout with one concern per file, @pytest.mark.integration marker + exclusion from default run.",
+          "severity": "must",
+          "standard_id": "bcde1b8d-f4e4-4055-aa62-64e60ef32624"
+        },
+        {
+          "discipline": "testing",
+          "enforces": [
+            "implement unit tests covering all score-calculation logic (weight redistribution, band derivation, normalisation, 30-day window filtering) with >80% code coverage",
+            "implement integration tests covering the connectivity-score API endpoint for all response shapes: scored response, 404 on no measurements, partial-metric redistribution, and per-operator isolation",
+            "implement a performance test exercising the endpoint at 2x expected peak concurrent load, asserting p95 < 1s and p99 < 2s inclusive of 30-day aggregation"
+          ],
+          "evidence": "casas-architecture NFR-T001/NFR-T002 mandate unit >80%, integration covering all API endpoints and DB ops, performance at 2x peak, and a production-equivalent staging environment; applies because the spec carries an explicit p95/p99 budget and per-operator isolation requirement.",
+          "severity": "must",
+          "standard_id": "86e155d5-6f9a-4896-a2c0-497dd4480fcf"
+        },
+        {
+          "discipline": "testing",
+          "enforces": [
+            "configure pytest-cov with --cov-fail-under=90 on changed code in the connectivity backend CI job",
+            "use uv run pytest --cov=connectivity --cov-report=term-missing --cov-fail-under=90 as the changed-code coverage command"
+          ],
+          "evidence": "AGENT.md CI agent contract specifies >=90% line coverage on changed code for Python services via pytest-cov; the per-service gate (5ee87c4b) sets 80% branch coverage as the hard blocker, with 90% changed-code as a strong preference.",
+          "severity": "should",
+          "standard_id": "dcc3a698-5d82-4bc2-aef2-94dbfbe3f98d"
+        },
+        {
+          "discipline": "testing",
+          "enforces": [
+            "mock the database layer (measurement query and aggregation) in unit tests so tests are isolated and fast",
+            "test edge cases explicitly: customer with no measurements in window (expect 404), customer with only one or two metric types (expect proportional weight redistribution), score boundary values at exactly 40, 60, 80",
+            "mark any test touching a real database or external service as @pytest.mark.integration"
+          ],
+          "evidence": "CASAS pytest DO/DON'T standard: mock external dependencies, test edge cases including boundaries, keep default suite fast by segregating slow tests.",
+          "severity": "should",
+          "standard_id": "95d55b6b-f6c1-4921-8a0b-000fa9dca66c"
+        }
+      ],
+      "approved": null,
+      "approver": null,
+      "compliance_verdicts": [
+        {
+          "compliant": false,
+          "discipline": "security",
+          "reason": "Two must-severity security standards are unsatisfied: the plan does not confirm the UC-C-004 gateway OAuth 2.0/OIDC layer fronts the new route (6f4761a0), and the plan does not confirm non-root container execution for the Cloud Run deployment (892743de); one should-severity gap also exists - no per-OpCo OAuth provider config is named or justified (88e0ec5e).",
+          "suggested_route": "plan_rework"
+        },
+        {
+          "compliant": false,
+          "discipline": "data_and_storage",
+          "reason": "Four must-severity data_and_storage standards are satisfied by the plan's nfr_mechanisms and task descriptions, but the should-severity standard requiring the plan to explicitly document that customer_id is treated as an opaque measurement-lookup token with no identity-table join (28b99619) is not addressed anywhere in the plan body - T-05 or data_notes must be updated to state this data access pattern explicitly.",
+          "suggested_route": "plan_rework"
+        },
+        {
+          "compliant": false,
+          "discipline": "infra_and_deploy",
+          "reason": "Two must-severity infra_and_deploy standards are unsatisfied: the plan lacks any task or mechanism for OpenTelemetry tracing / Cloud Trace correlation on the new endpoint (d57b7c38), and the rollback section omits a designated rollback owner and confirmation that rollback was tested in dev/staging before production (9ab16b74).",
+          "suggested_route": "plan_rework"
+        },
+        {
+          "compliant": false,
+          "discipline": "testing",
+          "reason": "Standard 86e155d5 (must) is partially unsatisfied: the performance test at 2x peak load is declared in test_strategy but is not assigned to any task in the task index (T-07 covers only unit and integration tests), creating an execution gap that requires plan_rework to assign or extend a task to own the performance test.",
+          "suggested_route": "plan_rework"
+        }
+      ],
+      "correlation_id": "feat-b7fcdbc2",
+      "created_at": "2026-07-24T15:29:37Z",
+      "created_by": "mehrasaiyam",
+      "discovered_standards": [
+        {
+          "discipline": "data_and_storage",
+          "enforces": [
+            "Every BigQuery query aggregating connectivity measurements must include a mandatory operator/market tenant filter derived from the authenticated request context (not the caller-supplied customer_id), so cross-OpCo measurement data can never be accessed in a single query"
+          ],
+          "evidence": "C003 Authoritative Database Pattern mandates per-operator data isolation for all new microservices; ADR-C020 v2 confirms CNX uses per-OpCo physical isolation; multi-tenancy principle requires country+operator+brand filtering on all data.",
+          "severity": "must",
+          "standard_id": "00c0c2e9-da3a-41b8-9903-c2e5b77f4043"
+        },
+        {
+          "discipline": "data_and_storage",
+          "enforces": [
+            "The BigQuery aggregation query for the 30-day measurement window must use a _PARTITIONTIME or equivalent partition-pruning predicate against the day-partitioned connectivity_metrics fact tables to avoid full-table scans and satisfy the p95 < 1s response-time budget"
+          ],
+          "evidence": "Horizon v2 - Connectivity Service documents that all 11 connectivity_metrics BigQuery tables are partitioned by day; unpartitioned scans over a 30-day window would violate the p95 SLA.",
+          "severity": "must",
+          "standard_id": "e807a967-3cf6-4ff1-a865-f954621298ae"
+        },
+        {
+          "discipline": "data_and_storage",
+          "enforces": [
+            "The BigQuery SELECT list and the API response DTO must project only aggregate/derived columns (weighted score, per-metric sub-scores, measurement counts, window bounds, customer_id echo) - raw measurement records, probe identifiers, device IDs, and internal operator identifiers must be excluded from both the query result and the response payload"
+          ],
+          "evidence": "Horizon v2 - Common Patterns states Connectivity carries no PII in probe data and mandates PII handling per service; spec outcomes 13-14 require data minimisation and opaque customer_id; GDPR-data-minimisation constraint applies.",
+          "severity": "must",
+          "standard_id": "7fa65394-8a57-4f40-8d6b-24e0db39b21f"
+        },
+        {
+          "discipline": "data_and_storage",
+          "enforces": [
+            "The operator/market context used to scope the BigQuery query must be sourced exclusively from the authenticated request token (the API key OpCo binding per ADR-C020 v2), never from the caller-supplied customer_id path parameter, so a customer_id collision across OpCos cannot resolve another operator's data"
+          ],
+          "evidence": "ADR-C020 v2 specifies per-OpCo instances with namespace per OpCo and OpCo-keyed credentials as the physical isolation mechanism; spec outcome 12 requires resolution to the requester's own operator/market context.",
+          "severity": "must",
+          "standard_id": "5c2842c1-5948-4b0a-94c8-758dbafa1b42"
+        },
+        {
+          "discipline": "data_and_storage",
+          "enforces": [
+            "The plan must document that the customer_id accepted in the path parameter is treated as an opaque measurement-lookup token and is never joined or resolved against an internal operator customer identity table - no TCId or internal identifier resolution is performed by the score query"
+          ],
+          "evidence": "Connectivity Architect principles state TCId abstraction must never expose operator customer IDs to third parties; spec out-of-scope confirms no external identity resolution, but the plan must make the data access pattern explicit.",
+          "severity": "should",
+          "standard_id": "28b99619-8130-4715-b3c4-44918fcd6f24"
+        },
+        {
+          "discipline": "infra_and_deploy",
+          "enforces": [
+            "Deploy new connectivity-score endpoint via the Horizon v2 GitHub Actions canary rollout: build image tagged with commit SHA, resolve immutable digest, deploy at 0% traffic, promote 10%->50%->100% with /health smoke-test gates, auto-rollback to previous revision on any smoke-test failure"
+          ],
+          "evidence": "Nugget ba2baa92 from 'Horizon v2 - Common Patterns' (casas-horizon-v2/docs/patterns.md) mandates the canary rollout as the standard deployment strategy for all Horizon v2 services including Connectivity.",
+          "severity": "must",
+          "standard_id": "ba2baa92-726e-4348-848e-cba81e86f6d0"
+        },
+        {
+          "discipline": "infra_and_deploy",
+          "enforces": [
+            "All infrastructure changes for the new endpoint (Cloud Run config, scaling parameters, env vars, secret references) must be expressed as Terraform in services/connectivity/infra/ using the shared Terraform modules convention - no manual infra changes permitted"
+          ],
+          "evidence": "Nugget 48093441 from 'casas-architecture/docs/0-architecture-governance/BUILD-GUIDELINES.md' mandates all MVE infrastructure as IaC in Git with no manual changes and shared Terraform module layout.",
+          "severity": "must",
+          "standard_id": "48093441-aec0-43ae-9963-df83df5016ac"
+        },
+        {
+          "discipline": "infra_and_deploy",
+          "enforces": [
+            "CI/CD workflow must authenticate to GCP via Workload Identity Federation (GitHub Actions -> WIF -> casas-deployer SA) with no service-account key files; image tagged with git SHA pushed to Artifact Registry at europe-west2-docker.pkg.dev"
+          ],
+          "evidence": "Nugget 1fdafb14 from 'Horizon v2 - Architecture Overview' (casas-horizon-v2/docs/architecture.md) establishes WIF keyless auth and Artifact Registry as the mandatory GCP auth and image registry pattern for all three Horizon v2 services.",
+          "severity": "must",
+          "standard_id": "1fdafb14-c053-417c-bfb7-d02f857850a4"
+        },
+        {
+          "discipline": "infra_and_deploy",
+          "enforces": [
+            "Connectivity service must expose GET /health (liveness, always 200 {status: ok}) and GET /ready (readiness, checks BigQuery/backend dependencies, returns 503 if unhealthy) used by Cloud Run for traffic routing and as the canary smoke-test target"
+          ],
+          "evidence": "Nugget 391a1e79 from 'Horizon v2 - Common Patterns' (casas-horizon-v2/docs/patterns.md) mandates both /health and /ready probes on every Horizon v2 service for Cloud Run lifecycle management.",
+          "severity": "must",
+          "standard_id": "391a1e79-7216-4650-b36c-172cf4224ccc"
+        },
+        {
+          "discipline": "infra_and_deploy",
+          "enforces": [
+            "New endpoint must emit structlog GCP Cloud Logging JSON with trace IDs (Cloud Trace correlation) and request metadata (method, path, status, latency); OpenTelemetry tracing to Cloud Trace; Connectivity metrics surface via BigQuery-based analytics (not Prometheus)"
+          ],
+          "evidence": "Nugget d57b7c38 from 'Horizon v2 - Common Patterns' (casas-horizon-v2/docs/patterns.md) defines the shared observability standard for all Horizon v2 services and explicitly notes Connectivity relies on BigQuery-based analytics rather than a Prometheus endpoint.",
+          "severity": "must",
+          "standard_id": "d57b7c38-094e-4085-836b-ebe4aaf86d11"
+        },
+        {
+          "discipline": "infra_and_deploy",
+          "enforces": [
+            "Plan must include a validated rollback procedure: previous image digest accessible in Artifact Registry, rollback trigger criteria defined (e.g. error rate >1%, p99 >2s), designated rollback owner, estimated rollback time <15 minutes, rollback tested in dev/staging before prod"
+          ],
+          "evidence": "Nugget 9ab16b74 from 'casas-architecture/docs/0-architecture-governance/BUILD-GUIDELINES.md' mandates a validated rollback checklist for every MVE deployment including rollback-tested-in-staging and <15-minute target.",
+          "severity": "must",
+          "standard_id": "9ab16b74-5bd3-4425-935c-e57829ff5f7b"
+        },
+        {
+          "discipline": "infra_and_deploy",
+          "enforces": [
+            "CI/CD pipeline for the connectivity-score endpoint must use per-service path filtering in .github/workflows/ so only the connectivity service rebuilds and redeploys on a push to services/connectivity/"
+          ],
+          "evidence": "Nugget d8208e76 from 'Horizon v2 - Repository Overview' (casas-horizon-v2/README.md) mandates unified pipelines with per-service path filtering as the standard CI/CD structure for the Horizon v2 monorepo.",
+          "severity": "must",
+          "standard_id": "d8208e76-df58-4aac-a9dc-bb7e68a7c061"
+        },
+        {
+          "discipline": "infra_and_deploy",
+          "enforces": [
+            "Secrets (app keys, MQTT credentials, any new API keys for the score endpoint) must be stored in GCP Secret Manager and injected at runtime as Cloud Run env vars - never committed to Git; config changes (env vars, scaling) must trigger a new immutable deployment, not in-place modification"
+          ],
+          "evidence": "Nugget 4bb04b26 from 'casas-architecture/docs/0-architecture-governance/BUILD-GUIDELINES.md' mandates secrets-separate-from-config, never-commit-secrets, and immutable deployments as BUILD-GUIDELINES config management principles.",
+          "severity": "must",
+          "standard_id": "4bb04b26-0c48-4d2c-9479-161a23abd4ae"
+        },
+        {
+          "discipline": "security",
+          "enforces": [
+            "All requests to the connectivity-score endpoint must be authenticated via the UC-C-004 API Gateway using OAuth 2.0 / OIDC (SR-004-01) and per-consumer token-based authorisation (SR-004-02) before the handler receives control",
+            "The plan must explicitly route the new endpoint through the gateway Auth Middleware component - no direct backend exposure"
+          ],
+          "evidence": "SR-004-01/02 (UC-C-004 connectivity API gateway functional requirements) mandate OAuth 2.0/OIDC authentication and per-consumer authorisation for all connectivity gateway endpoints; the spec requires the same auth regime as existing read endpoints.",
+          "severity": "must",
+          "standard_id": "6f4761a0-c6ac-4e58-b096-b516d5c3e687"
+        },
+        {
+          "discipline": "security",
+          "enforces": [
+            "The Connectivity service-side auth middleware must validate API keys using SHA-256 hashing with constant-time comparison before any handler logic executes",
+            "Plan must name the auth middleware module and the constant-time comparison function used"
+          ],
+          "evidence": "Horizon v2 - Common Patterns specifies Connectivity uses SHA-256-hashed API keys with constant-time comparison as its service-level auth method, the existing read-endpoint regime the spec requires this endpoint to inherit.",
+          "severity": "must",
+          "standard_id": "d28d3c2a-663f-4c0c-9493-b12ab271c434"
+        },
+        {
+          "discipline": "security",
+          "enforces": [
+            "The connectivity-score endpoint must inherit the Connectivity service token-bucket rate limiter scoped per-IP at 60 tokens with 10/s refill",
+            "Plan must confirm the rate-limiter middleware is applied to the new route with these parameters, or document a justified deviation"
+          ],
+          "evidence": "Horizon v2 - Common Patterns: shared security baseline mandates token-bucket rate limiting per service; Connectivity's parameters are 60 tokens / 10 s refill per IP.",
+          "severity": "must",
+          "standard_id": "792e5840-6a46-44cf-ba44-2e548e81ca65"
+        },
+        {
+          "discipline": "security",
+          "enforces": [
+            "The score handler must derive the operator context from the authenticated API key (per-OpCo key mapped to operator/market) and inject it as a mandatory filter on all database queries",
+            "No cross-operator measurement data may be reachable regardless of the customer_id path parameter value - isolation must be enforced query-side, not post-fetch"
+          ],
+          "evidence": "ADR-C020 v2 per-layer isolation model mandates K8s namespace per OpCo and scoped data access; operator routing via Apigee key; the spec outcome requires data belonging to another operator must never be returned.",
+          "severity": "must",
+          "standard_id": "5c2842c1-5948-4b0a-94c8-758dbafa1b42"
+        },
+        {
+          "discipline": "security",
+          "enforces": [
+            "Structured logs emitted by the score handler must redact or omit the customer_id value (PII) - structlog must be configured with a PII-redaction processor before the GCP Cloud Logging JSON sink",
+            "Non-root container execution must be confirmed for the Cloud Run deployment of this service"
+          ],
+          "evidence": "Horizon v2 - Common Patterns: shared security baseline requires PII redaction and non-root containers for all platform services; the score endpoint processes customer_id which is personal data under GDPR.",
+          "severity": "must",
+          "standard_id": "892743de-26d1-41e8-b2c3-dae3dc831a2a"
+        },
+        {
+          "discipline": "security",
+          "enforces": [
+            "The response serialiser must return only the derived/aggregate fields listed in the spec (score, status, sub-scores, counts, customer_id echo, window) and must actively strip any internal device identifiers, line IDs, or cross-operator identifiers before the response is returned",
+            "Plan must name the serialiser/schema layer and confirm no raw measurement fields or internal IDs are reachable via the response envelope"
+          ],
+          "evidence": "CNX API per-OpCo isolation nugget documents the layered auth model where internal IDs are not surfaced; the spec outcome requires the endpoint to leak no internal operator identifiers, device or line identifiers.",
+          "severity": "must",
+          "standard_id": "f746d9ef-1817-4853-b0f1-08fb7224c1d7"
+        },
+        {
+          "discipline": "security",
+          "enforces": [
+            "The plan must specify which per-OpCo OAuth provider configuration the score endpoint relies on - either confirming it inherits the gateway-level per-market OAuth config (CON-004-02) or documenting a justified alternative"
+          ],
+          "evidence": "CON-004-02 (UC-C-004 gateway constraints): the gateway must support per-OpCo OAuth provider integration because each market runs its own IdP; applicable because the score endpoint sits behind the same gateway.",
+          "severity": "should",
+          "standard_id": "88e0ec5e-c892-4ecd-9141-4ce249733a5a"
+        },
+        {
+          "discipline": "testing",
+          "enforces": [
+            "run uv run pytest --cov --cov-branch --cov-fail-under=80 in services/connectivity as the CI coverage gate",
+            "configure CI to fail the PR if branch coverage drops below 80% for the connectivity backend service"
+          ],
+          "evidence": "Horizon v2 - Repository Overview names services/connectivity/backend as a per-service directory where the 80% branch-coverage gate is enforced via uv run pytest --cov --cov-branch --cov-fail-under=80.",
+          "severity": "must",
+          "standard_id": "5ee87c4b-a0b5-4840-8c88-682aa436b98f"
+        },
+        {
+          "discipline": "testing",
+          "enforces": [
+            "use uv run pytest (not bare pytest) for all test invocations in the connectivity backend",
+            "lay out test files flat under tests/ with one concern per file (e.g. test_score.py)",
+            "mark integration tests with @pytest.mark.integration and exclude from the default uv run pytest run"
+          ],
+          "evidence": "CASAS Python testing conventions: uv run pytest convention, flat tests/ layout with one concern per file, @pytest.mark.integration marker + exclusion from default run.",
+          "severity": "must",
+          "standard_id": "bcde1b8d-f4e4-4055-aa62-64e60ef32624"
+        },
+        {
+          "discipline": "testing",
+          "enforces": [
+            "implement unit tests covering all score-calculation logic (weight redistribution, band derivation, normalisation, 30-day window filtering) with >80% code coverage",
+            "implement integration tests covering the connectivity-score API endpoint for all response shapes: scored response, 404 on no measurements, partial-metric redistribution, and per-operator isolation",
+            "implement a performance test exercising the endpoint at 2x expected peak concurrent load, asserting p95 < 1s and p99 < 2s inclusive of 30-day aggregation"
+          ],
+          "evidence": "casas-architecture NFR-T001/NFR-T002 mandate unit >80%, integration covering all API endpoints and DB ops, performance at 2x peak, and a production-equivalent staging environment; applies because the spec carries an explicit p95/p99 budget and per-operator isolation requirement.",
+          "severity": "must",
+          "standard_id": "86e155d5-6f9a-4896-a2c0-497dd4480fcf"
+        },
+        {
+          "discipline": "testing",
+          "enforces": [
+            "configure pytest-cov with --cov-fail-under=90 on changed code in the connectivity backend CI job",
+            "use uv run pytest --cov=connectivity --cov-report=term-missing --cov-fail-under=90 as the changed-code coverage command"
+          ],
+          "evidence": "AGENT.md CI agent contract specifies >=90% line coverage on changed code for Python services via pytest-cov; the per-service gate (5ee87c4b) sets 80% branch coverage as the hard blocker, with 90% changed-code as a strong preference.",
+          "severity": "should",
+          "standard_id": "dcc3a698-5d82-4bc2-aef2-94dbfbe3f98d"
+        },
+        {
+          "discipline": "testing",
+          "enforces": [
+            "mock the database layer (measurement query and aggregation) in unit tests so tests are isolated and fast",
+            "test edge cases explicitly: customer with no measurements in window (expect 404), customer with only one or two metric types (expect proportional weight redistribution), score boundary values at exactly 40, 60, 80",
+            "mark any test touching a real database or external service as @pytest.mark.integration"
+          ],
+          "evidence": "CASAS pytest DO/DON'T standard: mock external dependencies, test edge cases including boundaries, keep default suite fast by segregating slow tests.",
+          "severity": "should",
+          "standard_id": "95d55b6b-f6c1-4921-8a0b-000fa9dca66c"
+        }
+      ],
+      "finalized_at": "2026-07-24T15:48:40Z",
+      "finalized_version": 2,
+      "flagged_for_spec": [],
+      "intent_kind": "new_feature",
+      "migration": "n/a - no schema or data migration. The endpoint only reads existing SamKnows fact tables (fact_httpget, fact_httppost, fact_udplatency); it adds no columns and writes no rows. New configuration (hashed API key, rate-limit params, api-key->operator mapping, latency target) is delivered as Cloud Run env vars sourced from Secret Manager, never committed to Git.",
+      "nfr_mechanisms": [
+        "Meet the p95<1s / p99<2s budget by issuing parameterized BigQuery aggregation queries with a trailing-30-day dtime_utc partition-pruning predicate so only in-range day-partitions of the fact tables are scanned, and computing AVG/COUNT server-side rather than fetching raw rows.",
+        "Guarantee determinism (same inputs -> same score) using fixed weight constants (0.5/0.3/0.2), deterministic proportional reweighting, and upper-inclusive band thresholds, with no clock- or random-dependent input beyond the request-time window bound.",
+        "Enforce GDPR data minimisation by projecting only aggregate/derived columns in the BigQuery SELECT and serialising a response DTO with no fields for raw measurement rows, device/line identifiers, or internal operator identifiers.",
+        "Enforce per-OpCo isolation by deriving the operator/market from the authenticated API key and injecting it as a mandatory WHERE predicate on every measurement query (query-side, not post-fetch), so a customer_id collision across operators cannot resolve another operator's data.",
+        "Preserve auth and rate-limit parity by applying the SHA-256 constant-time API-key dependency (gated by CONNECTIVITY_API_KEY_ENABLED) and the per-IP token-bucket limiter (60 tokens / 10s refill) to the new route, and redacting customer_id from structlog output via a PII-redaction processor.",
+        "Expose the endpoint only behind the UC-C-004 API gateway, which enforces OAuth 2.0/OIDC per-consumer authorisation upstream using each market's per-OpCo OAuth provider configuration (CON-004-02); the service-level SHA-256 constant-time API-key dependency is the second defence-in-depth layer, so the route is never reachable without gateway auth.",
+        "Run the Cloud Run container as a non-root user (Dockerfile USER directive) so the new endpoint inherits the platform's non-root execution baseline.",
+        "Emit structured JSON logs enriched with Cloud Trace-correlated trace and span IDs plus request metadata (method, path, status, latency), and propagate OpenTelemetry spans to Cloud Trace for the new route, matching the service observability baseline (customer_id stays redacted via the PII processor)."
+      ],
+      "override_reason": null,
+      "parent_version": 1,
+      "plan_id": "plan-3034be54",
+      "plan_verdict": "compliant",
+      "project": "casas/connectivity",
+      "rejection_reason": null,
+      "reviews": {
+        "cost_notes": "Marginal cost is one BigQuery aggregation query per request over at most 30 day-partitions across up to three fact tables, bounded by the p95<1s budget via partition pruning. No new always-on infrastructure: reuses the existing Cloud Run service and BigQuery dataset.",
+        "data_notes": "Reads existing day-partitioned fact tables and aggregates AVG(speed_mbps)/AVG(provisioned_mbps)/AVG(rtt_avg_ms) and COUNT within the window; performs no writes and creates no tables. The customer_id is an opaque query-filter token, never joined against or resolved through an internal identity table (no TCId resolution). Operator/market scope is a mandatory query-side predicate sourced from the authenticated context, never from customer_id.",
+        "infra_notes": "No new infrastructure resources; deploy via the existing Terraform-managed Cloud Run service and per-service CI workflow, with secrets from Secret Manager and non-root container execution. The existing /health and /ready probes are reused as canary smoke-test gates. Observability: structured JSON logs with Cloud Trace-correlated trace/span IDs and request metadata, plus OpenTelemetry spans exported to Cloud Trace. Rollback is rehearsed in staging with a designated service-owner as rollback owner.",
+        "mitigations": [
+          "Operator scope is enforced as a mandatory query-side WHERE predicate, not post-fetch filtering, so a Python-side bug cannot leak cross-operator data.",
+          "Defensive in-memory re-filtering on customer_id/window/operator guards against an adapter that returns extra rows (e.g. the in-memory mock).",
+          "Auth and rate-limiting are attached as route dependencies so the endpoint cannot be served without them when enabled."
+        ],
+        "owners": [],
+        "privacy_notes": "customer_id is personal data under GDPR; processing is minimised to a 30-day derived aggregate with no raw records returned, customer_id redacted from logs, and access isolated per operator/market.",
+        "security_notes": "Adds a read surface keyed by customer_id (personal data). Mitigated by defence-in-depth: the route is reachable only behind the UC-C-004 API gateway (OAuth 2.0/OIDC per-consumer auth, per-OpCo OAuth provider config CON-004-02) plus a service-level SHA-256 constant-time API-key dependency, per-IP rate limiting, query-side operator scoping, PII redaction in logs, non-root container execution, and a response DTO that leaks no internal identifiers."
+      },
+      "rollback": "Roll back by promoting the previous Cloud Run revision (the prior immutable image digest retained in Artifact Registry), target <15 minutes; because the change is an additive, read-only GET route with no migration, rollback is a pure revision switch with no data cleanup and the route simply disappears. Rollback triggers: sustained endpoint error rate >1% or p99 >2s. Designated rollback owner: the connectivity service on-call/service owner initiates and verifies the revision switch. The rollback path is rehearsed in dev/staging before any production promotion (revert-to-previous-revision drill run as part of the canary gate). The route can additionally be disabled without a redeploy by toggling its registration/config flag off.",
+      "rollout": "Deploy through the existing Horizon v2 per-service path-filtered GitHub Actions workflow for services/connectivity: build an image tagged with the commit SHA, push to Artifact Registry via Workload Identity Federation (no key files), and roll out on Cloud Run as a canary 0% -> 10% -> 50% -> 100% with /health and /ready smoke-test gates between steps. The new GET route is purely additive, so no existing traffic path changes. API-key auth stays disabled in dev (CONNECTIVITY_API_KEY_ENABLED=false) and enabled in production behind the API gateway.",
+      "service": "Connectivity Service (Horizon v2)",
+      "spec_id": "spec-7aeea9f3",
+      "state": "submit",
+      "summary": "Implement GET /api/v1/customer/{customer_id}/connectivity-score in the FastAPI connectivity service (services/connectivity). A pure scoring module normalises download speed (fact_httpget.speed_mbps vs provisioned_mbps), upload speed (fact_httppost.speed_mbps vs provisioned_mbps), and latency (fact_udplatency.rtt_avg_ms vs a configured target) to 0-100 sub-scores, combines them 50/30/20, applies upper-inclusive bands (>=80 excellent, 60-<80 good, 40-<60 degraded, <40 critical), and reweights proportionally when a metric type is absent. A score service issues operator-scoped, 30-day partition-pruned BigQuery aggregation queries and delegates to the scorer; the route returns a derived-only DTO or 404 when no measurements exist. A minimal security module adds API-key auth, per-IP rate limiting, and PII redaction so the new route matches the service baseline and honours GDPR/per-OpCo obligations.",
+      "tasks": [
+        {
+          "depends_on": [],
+          "description": "New module src/connectivity/scoring.py with pure, I/O-free functions. Normalise each metric to a 0-100 sub-score: speed metrics as capped ratio of measured to provisioned throughput; latency as measured rtt against a configured latency target (lower is better). Combine sub-scores with fixed weights download=0.5, upload=0.3, latency=0.2. Derive the status label with upper-inclusive bands (>=80 excellent, 60-<80 good, 40-<60 degraded, <40 critical). When one or two metric types are absent, renormalise the present weights so they sum to 1 and score on those only. Deterministic: no clock/random inputs. Weights and band thresholds are module constants, not request-configurable.",
+          "id": "T-01",
+          "name": "Add pure scoring module: normalisation, 50/30/20 weighting, upper-inclusive bands, proportional reweighting",
+          "template": "build"
+        },
+        {
+          "depends_on": [],
+          "description": "New module src/connectivity/models/score.py with Pydantic response models: overall score (0-100), status label, window bounds (start/end), per-metric block (sub_score + sample_count) for download/upload/latency, and an echo of the supplied customer identifier. The DTO exposes only derived/aggregate values; it has no field for raw measurement rows, device/line identifiers, or internal operator identifiers, enforcing data minimisation at the serialisation boundary.",
+          "id": "T-02",
+          "name": "Add score response DTO models projecting only derived/aggregate fields",
+          "template": "build"
+        },
+        {
+          "depends_on": [
+            "T-04"
+          ],
+          "description": "New package src/connectivity/security/ providing: (a) a FastAPI dependency that validates an API key by SHA-256 hash with constant-time comparison, active only when CONNECTIVITY_API_KEY_ENABLED is true; (b) a per-IP token-bucket rate limiter (60 tokens, 10s refill) applied as a dependency/middleware, gated by CONNECTIVITY_RATE_LIMIT_ENABLED; (c) a structlog processor that redacts/omits customer_id (and other PII keys) from log events before the JSON sink. Reusable across /api/v1 routes so the new endpoint introduces no weaker access path.",
+          "id": "T-03",
+          "name": "Add security module: API-key auth dependency, per-IP rate limiter, and structlog PII-redaction processor",
+          "template": "build"
+        },
+        {
+          "depends_on": [],
+          "description": "Extend src/connectivity/config/settings.py (CONNECTIVITY_ prefix) with: api_key_enabled (bool, default false), api_key_sha256 (hashed key), rate_limit_enabled (bool, default true) plus bucket capacity/refill, an api-key-to-operator/market mapping used to derive request operator scope, and latency_target_ms used by the scorer. No secrets committed; production values arrive as Cloud Run env vars from Secret Manager.",
+          "id": "T-04",
+          "name": "Add settings fields for auth, rate limiting, operator-key mapping, and latency target",
+          "template": "build"
+        },
+        {
+          "depends_on": [
+            "T-01",
+            "T-04"
+          ],
+          "description": "New module src/connectivity/services/score_service.py. Resolve the operator/market from the authenticated request context (api-key->operator mapping) and inject it as a mandatory predicate. For each of fact_httpget, fact_httppost, fact_udplatency, issue a parameterized BigQuery aggregation query filtered by customer_id, a trailing-30-day dtime_utc cutoff (partition pruning), and the operator predicate, projecting only AVG(speed_mbps)/AVG(provisioned_mbps)/AVG(rtt_avg_ms) and COUNT plus min/max dtime for the window. Apply defensive in-memory re-filtering on customer_id/window/operator so results are correct even against an adapter that ignores query params (the mock). Pass the aggregates to scoring.py. Raise a not-found signal when all three counts are zero. The customer_id path parameter is treated as an opaque measurement-lookup token: it is used only as a query filter value and is never joined against or resolved through any internal operator/customer identity table (no TCId or identity resolution is performed).",
+          "id": "T-05",
+          "name": "Add score service: operator-scoped, partition-pruned BigQuery aggregation delegating to the scorer",
+          "template": "build"
+        },
+        {
+          "depends_on": [
+            "T-02",
+            "T-03",
+            "T-05"
+          ],
+          "description": "New module src/connectivity/api/routes/score.py exposing GET /api/v1/customer/{customer_id}/connectivity-score under an APIRouter(prefix=/api/v1). Wire the API-key auth dependency, the per-IP rate limiter, the operator-context dependency, and the get_bq_adapter dependency; call the score service; return the DTO on success and a 404 (customer identified) when the service reports no measurements. Register the router in src/connectivity/main.py create_app().",
+          "id": "T-06",
+          "name": "Add and register the connectivity-score GET route wiring auth, rate limit, operator scope, and score service",
+          "template": "build"
+        },
+        {
+          "depends_on": [
+            "T-06"
+          ],
+          "description": "Add tests/test_scoring.py (unit, mocked/no I/O) covering normalisation, 50/30/20 weighting, boundary values at exactly 40/60/80, proportional reweighting for 1-2 metric types, and determinism; and tests/test_score_endpoint.py (integration, @pytest.mark.integration) driving the endpoint via httpx AsyncClient with get_bq_adapter overridden by a stub returning controlled aggregates: scored response, 404 on no measurements, partial-metric reweighting, per-operator isolation, auth enforced when enabled, and customer_id absent from emitted logs. Keep the default suite fast (mock the adapter) and ensure uv run pytest --cov --cov-branch --cov-fail-under=80 passes in services/connectivity.",
+          "id": "T-07",
+          "name": "Add unit and integration tests and confirm the 80% branch-coverage gate",
+          "template": "build"
+        },
+        {
+          "depends_on": [
+            "T-06"
+          ],
+          "description": "Add a performance/load test that owns the test_strategy performance scenario: drive the connectivity-score endpoint at 2x expected peak concurrent load against a production-like staging dataset (anonymised) and assert p95 < 1s and p99 < 2s inclusive of the 30-day aggregation. Runs in the CI performance stage, not the default unit/integration fast run.",
+          "id": "T-08",
+          "name": "Add load/performance test asserting p95<1s and p99<2s at 2x expected peak",
+          "template": "build"
+        }
+      ],
+      "test_strategy": {
+        "coverage_notes": "Unit tests mock the BigQuery adapter and exercise scoring.py directly; integration tests drive the endpoint via httpx AsyncClient with get_bq_adapter overridden by a stub. CI gate: uv run pytest --cov --cov-branch --cov-fail-under=80 in services/connectivity; >=90% coverage target on changed code. Integration tests are marked @pytest.mark.integration and segregated from the default fast run per CASAS pytest conventions.",
+        "gherkin_scenarios": [
+          {
+            "given": "a composite score of exactly 80, then exactly 60, then exactly 40",
+            "id": "G-01",
+            "task_id": "T-01",
+            "then": "the labels are excellent, good, and degraded respectively (upper-inclusive bands), and a score below 40 yields critical",
+            "when": "the status label is derived"
+          },
+          {
+            "given": "a customer with only download and latency sub-scores available (no upload)",
+            "id": "G-02",
+            "task_id": "T-01",
+            "then": "the download and latency weights are renormalised to sum to 1 (0.5 and 0.2 -> ~0.714 and ~0.286) and the score uses only those two metrics",
+            "when": "the composite score is computed"
+          },
+          {
+            "given": "measured throughput greater than or equal to provisioned throughput",
+            "id": "G-03",
+            "task_id": "T-01",
+            "then": "the sub-score is capped at 100 and never exceeds it",
+            "when": "the speed metric is normalised"
+          },
+          {
+            "given": "an identical set of per-metric aggregates",
+            "id": "G-04",
+            "task_id": "T-01",
+            "then": "the numeric score and status are identical every time (deterministic)",
+            "when": "the score is computed multiple times"
+          },
+          {
+            "given": "a successfully scored customer",
+            "id": "G-05",
+            "task_id": "T-02",
+            "then": "the payload contains only the customer identifier echo, score, status, window bounds, and per-metric sub_score plus sample_count, and contains no raw measurement rows or internal device/line/operator identifiers",
+            "when": "the response is serialised"
+          },
+          {
+            "given": "the customer has measurements dated both within and older than the trailing 30-day window",
+            "id": "G-06",
+            "task_id": "T-05",
+            "then": "only measurements within the 30-day window contribute to the sub-scores",
+            "when": "the score service aggregates measurements"
+          },
+          {
+            "given": "a customer with no measurements of any type in the 30-day window",
+            "id": "G-07",
+            "task_id": "T-05",
+            "then": "the endpoint returns a 404 not-found response that identifies the customer, not a score",
+            "when": "the connectivity score is requested"
+          },
+          {
+            "given": "a customer identifier that exists under operator B while the request is authenticated as operator A",
+            "id": "G-08",
+            "task_id": "T-06",
+            "then": "operator B measurements are never returned or reflected in the score (the request is scoped to operator A only)",
+            "when": "the connectivity score is requested"
+          },
+          {
+            "given": "CONNECTIVITY_API_KEY_ENABLED is true",
+            "id": "G-09",
+            "task_id": "T-06",
+            "then": "the invalid call is rejected before any measurement query and the valid call returns the scored response",
+            "when": "the endpoint is called with a missing or invalid API key, then with a valid key"
+          },
+          {
+            "given": "a request carrying a customer identifier",
+            "id": "G-10",
+            "task_id": "T-03",
+            "then": "the customer_id value does not appear in the emitted log records",
+            "when": "the handler emits structured logs"
+          }
+        ],
+        "performance_tests": [
+          "Load test the endpoint at 2x expected peak concurrent load asserting p95 < 1s and p99 < 2s inclusive of the 30-day aggregation, against a production-like staging dataset with anonymised data."
+        ]
+      },
+      "title": "Customer connectivity score endpoint",
+      "unsealed_changes": false,
+      "updated_at": "2026-07-24T15:48:40Z",
+      "version": 2
+    },
+    "imported_spec": {
+      "approved": null,
+      "approver": null,
+      "body": {
+        "business_context": [
+          {
+            "relevance": "Answers spec question: How are raw broadband measurements (download/upload Mbps, latency ms) normalized onto a 0-100 quality scale anywhere in CASAS? Any reference thresholds, target throughput values, or scoring bands?",
+            "source": "nugget:9265286c-625f-4c02-bb76-7aa555240c8a [external:casas-architecture]",
+            "summary": "No 0-100 numeric scoring scale is defined anywhere in CASAS. The closest existing pattern is the Consumer Experience Mapping on the CNX Speed Test Evaluation Platform, which classifies raw metrics (download Mbps, RTT ms, jitter, packet loss) into three threshold-based indicator states \u2014 good (green tick), marginal (amber), or insufficient (red cross) \u2014 across five application categories (Streaming, Gaming, Video Calls, Social Media, Audio & Voice), with no numeric band or weighted aggregate defined."
+          },
+          {
+            "relevance": "Answers spec question: What identifies a \"customer\" in the connectivity data model? Is there a customer_id field, and how does it relate to probes (probe_registry) and the fact tables?",
+            "source": "nugget:bd18e25f-010a-4452-a249-399e16cf1a91 [external:casas-architecture]; nugget:e807a967-3cf6-4ff1-a865-f954621298ae [external:horizon-v2-microservices]; nugget:69c969e3-b795-474e-b575-085ba9477dc4 [external:casas-architecture]",
+            "summary": "The authoritative customer identifier in the platform is minted by the CRM/Account Service. In the connectivity service's measurement store, probe and CPE records (customer ID, hardware type, service tier) are sourced from a separate identity resolution service in the target architecture; the link between a customer identifier and a probe is resolved via that external service rather than being embedded directly in the measurement dataset."
+          },
+          {
+            "relevance": "Establishes whether the measurement store already supports time-bounded queries over a trailing window, and which metric categories (throughput, latency) have separate storage structures \u2014 context needed to determine whether the 30-day window and per-metric sub-score design are consistent with how measurements are physically available.",
+            "source": "nugget:e807a967-3cf6-4ff1-a865-f954621298ae [external:horizon-v2-microservices]; nugget:f1ca10e2-e8a8-4c9b-af6a-733ffd7e72c3 [external:casas-architecture]; nugget:1368a70e-a725-40e9-b2c4-106eab36edc0 [external:horizon-v2-microservices]",
+            "summary": "Download and upload throughput measurements and latency/RTT measurements are stored in separate fact tables in the connectivity measurement store. All measurement tables support time-bounded queries, making it possible to restrict aggregation to a trailing window such as the last 30 days. Specific field names within those tables are not enumerated in the knowledge base."
+          },
+          {
+            "relevance": "Answers spec question: Does the connectivity service require API-key authentication (or other auth) on its /api/v1 REST endpoints? What is the auth/permission model?",
+            "source": "nugget:d28d3c2a-663f-4c0c-9493-b12ab271c434 [external:horizon-v2-microservices]; nugget:695338a5-b68e-462c-8fa7-a525fffaa619 [external:horizon-v2-microservices]",
+            "summary": "The connectivity service enforces API key authentication on its /api/v1 endpoints, with authentication enabled in production and disabled in local/development environments. Per-IP rate limiting is also applied. In production, the service sits behind an API gateway that enforces per-operator API key authentication at the gateway tier."
+          },
+          {
+            "relevance": "Answers spec question: Are there existing score, health, or quality-rating endpoints in the connectivity service (e.g. /api/v1/fleet/health) whose response shape or semantics this new endpoint should align with?",
+            "source": "nugget:8e96c34d-5396-4cd7-be94-3d8607e48502 [external:horizon-v2-microservices]; nugget:da51b767-839e-4fec-a623-9cd0faa42ee4 [external:horizon-v2-microservices]; nugget:1b78e00c-8a08-49e2-8db8-05f5cf67e101 [external:horizon-v2-microservices]",
+            "summary": "The connectivity service has an existing fleet-level health endpoint whose response shape and semantics the new per-customer score endpoint should align with. The service follows a standard error envelope format. The detailed response shape of the existing fleet health endpoint is not recorded in the knowledge base."
+          },
+          {
+            "relevance": "Answers spec question: Is there a defined latency or performance budget for connectivity REST API read endpoints that query BigQuery?",
+            "source": "nugget:4ff11db3-05c6-49ad-9d0a-641c42e82227 [external:casas-architecture]; nugget:d100b0b8-b3f4-42b6-b7b0-ce273a38ed17 [external:casas-architecture]",
+            "summary": "No connectivity-service-specific read latency budget is recorded for measurement-aggregation endpoints. Adjacent targets from the architecture: Touchpoint APIs are targeted at p95 < 500 ms / p99 < 1000 ms / 99.9% uptime; a separate speed-test NFR requires measurement results to be available near real-time after test completion, but sets no read-query response time."
+          }
+        ],
+        "compliance_constraints": [
+          {
+            "applies_because": "The endpoint accepts a customer_id path parameter to return a scored view of that customer's broadband measurements \u2014 introducing a customer-identified data access surface subject to GDPR data-handling obligations that apply per OpCo market across all connectivity APIs (CON-004-03, CON-009-005).",
+            "namespace": "compliance",
+            "value": "gdpr"
+          },
+          {
+            "applies_because": "The Connectivity service's established data profile carries no PII in probe data (device IDs only); this endpoint extends that profile to expose a derived score keyed by customer_id, requiring that only the necessary customer-identifying data is processed over the 30-day window and that no raw or excess personal data is returned.",
+            "namespace": "compliance",
+            "value": "gdpr-data-minimisation"
+          },
+          {
+            "applies_because": "A core connectivity principle is that operator customer IDs must never be exposed to third parties via TCId abstraction; the endpoint's use of a customer identifier in the path and response must respect this boundary so internal identifiers are not leaked across OpCo trust domains.",
+            "namespace": "domain",
+            "value": "casas-tcid-abstraction"
+          },
+          {
+            "applies_because": "ADR-C020 mandates per-OpCo data isolation for all customer data; the connectivity-score endpoint returns per-customer data that must be scoped and isolated to the originating OpCo market so a query in one market cannot resolve data belonging to another.",
+            "namespace": "domain",
+            "value": "casas-per-opco-data-isolation"
+          },
+          {
+            "applies_because": "The score is derived from SamKnows broadband measurements, a regulated measurement approach subject to UK Ofcom approval (CON-ST-002, NFR-ST-007); any API surface that surfaces derived outputs from this measurement data inherits the obligation that the underlying measurement methodology is Ofcom-compliant.",
+            "namespace": "compliance",
+            "value": "ofcom"
+          }
+        ],
+        "intent_kind": "new_feature",
+        "out_of_scope": [
+          "Discovering the network topology behind a customer - i.e. resolving which probe, device, or line a customer maps to - via an external identity or inventory service. The endpoint operates only on measurements already tagged with the supplied customer identifier; it does not thereby waive the data-governance obligations that apply to handling that identifier and its data.",
+          "Changing how SamKnows measurements are ingested, enriched, or tagged with a customer identifier.",
+          "Historical trends, time-series, or per-day score breakdowns - the endpoint returns a single current rollup only.",
+          "Scoring metric types other than download speed, upload speed, and latency (for example jitter, packet loss, MOS, or disconnection events).",
+          "Any UI, dashboard, or visualisation surface for the score - this is an API-only capability.",
+          "Caller-tunable weights or band thresholds - the weighting and banding are fixed by this specification, not configurable per request.",
+          "Ranking or comparing customers against one another or against a fleet-wide distribution."
+        ],
+        "outcomes": [
+          "A caller can request the connectivity score for a given customer identifier and receives a numeric score in the range 0-100 together with a status label.",
+          "The status label is exactly one of four values - excellent, good, degraded, critical - derived from the score using upper-inclusive bands: score >= 80 is excellent, 60 <= score < 80 is good, 40 <= score < 60 is degraded, and score < 40 is critical.",
+          "The score reflects only measurements whose test time falls within the trailing 30-day window ending at the time of the request; measurements older than 30 days do not influence it.",
+          "The score is a weighted combination of the customer's download speed, upload speed, and latency, weighted 50%, 30%, and 20% respectively.",
+          "Each of the three metrics is normalised to a 0-100 sub-score based on measured performance relative to the customer's provisioned service level for the speed metrics and relative to a latency target for the latency metric, so a customer meeting their provisioned service scores near the top of the range regardless of their plan tier.",
+          "When the window contains some but not all three metric types, the score is computed from the metric types actually present, with the weights redistributed proportionally across the available metrics.",
+          "When no measurements of any type exist for the customer within the 30-day window, the request returns a 404 not-found response identifying the customer, rather than a score.",
+          "For the same customer, window, and underlying measurement data, repeated requests return the same score and status (the computation is deterministic).",
+          "The response conveys the customer identifier, the score, the status, the window it covers, and the per-metric sub-scores together with how many measurements each sub-score is based on, so a caller can interpret and justify the score without a second request.",
+          "The endpoint enforces the same authentication and rate-limiting regime as the service's existing read endpoints, introducing no weaker access path to customer measurement data.",
+          "Under expected load the endpoint meets a p95 response-time budget of under 1 second and a p99 of under 2 seconds, inclusive of the 30-day measurement aggregation.",
+          "A request resolves only measurements belonging to the requester's own operator/market context; data belonging to another operator is never returned or allowed to influence a customer's score, even if a customer identifier were to collide across operators.",
+          "The endpoint returns only derived and aggregate values (the score, status, per-metric sub-scores, measurement counts, the supplied customer identifier, and the window); it exposes no raw underlying measurement records and no additional personal data about the customer beyond the identifier the caller supplied.",
+          "The customer identifier is treated as an opaque token supplied by the caller; the endpoint's response leaks no internal operator identifiers, device or line identifiers, or identifiers belonging to any other operator."
+        ],
+        "problem": "Operators and care agents need a single, at-a-glance measure of an individual customer's recent broadband quality, but the connectivity service exposes no per-customer rollup. It ingests test measurements and surfaces raw records and fleet-level health, so answering \"how is this customer's connection doing?\" today means inspecting raw speed/latency rows or fleet dashboards. There is no way to get a single bounded score and a plain-language status for one customer over their recent measurement history.",
+        "title": "Customer connectivity score endpoint",
+        "users": [
+          "Care agents and operator support staff who need a quick, plain-language verdict on a specific customer's connection quality during a support interaction.",
+          "Operator-facing systems and dashboards that display or triage individual customer connection health and need a single score to drive that view.",
+          "Downstream automation (alerting, prioritisation) that acts on a customer's current connectivity standing."
+        ]
+      },
+      "correlation_id": "feat-b7fcdbc2",
+      "created_by": "mehrasaiyam",
+      "frozen_at": "2026-07-24T15:27:49Z",
+      "project": "casas/connectivity",
+      "service": "Connectivity Service (Horizon v2)",
+      "spec_id": "spec-7aeea9f3",
+      "state": "submit"
+    },
+    "submission": {
+      "acms": {
+        "ok": true,
+        "specVersion": 1,
+        "version": 1
+      },
+      "attempted_at": "2026-07-24T15:48:44Z",
+      "error": null,
+      "factory": {
+        "ok": true,
+        "pipeline_id": "4fb6ab5f-a08b-40e5-b183-e17c81c6e14a"
+      },
+      "plan_id": "plan-3034be54",
+      "status": "ok"
+    }
+  },
+  "plan_id": "plan-3034be54",
+  "spec": {
+    "doc": {
+      "acms_verdict": "compliant",
+      "approved": null,
+      "approver": null,
+      "business_context": [
+        {
+          "relevance": "Answers spec question: How are raw broadband measurements (download/upload Mbps, latency ms) normalized onto a 0-100 quality scale anywhere in CASAS? Any reference thresholds, target throughput values, or scoring bands?",
+          "source": "nugget:9265286c-625f-4c02-bb76-7aa555240c8a [external:casas-architecture]",
+          "summary": "No 0-100 numeric scoring scale is defined anywhere in CASAS. The closest existing pattern is the Consumer Experience Mapping on the CNX Speed Test Evaluation Platform, which classifies raw metrics (download Mbps, RTT ms, jitter, packet loss) into three threshold-based indicator states \u2014 good (green tick), marginal (amber), or insufficient (red cross) \u2014 across five application categories (Streaming, Gaming, Video Calls, Social Media, Audio & Voice), with no numeric band or weighted aggregate defined."
+        },
+        {
+          "relevance": "Answers spec question: What identifies a \"customer\" in the connectivity data model? Is there a customer_id field, and how does it relate to probes (probe_registry) and the fact tables?",
+          "source": "nugget:bd18e25f-010a-4452-a249-399e16cf1a91 [external:casas-architecture]; nugget:e807a967-3cf6-4ff1-a865-f954621298ae [external:horizon-v2-microservices]; nugget:69c969e3-b795-474e-b575-085ba9477dc4 [external:casas-architecture]",
+          "summary": "The authoritative customer identifier in the platform is minted by the CRM/Account Service. In the connectivity service's measurement store, probe and CPE records (customer ID, hardware type, service tier) are sourced from a separate identity resolution service in the target architecture; the link between a customer identifier and a probe is resolved via that external service rather than being embedded directly in the measurement dataset."
+        },
+        {
+          "relevance": "Establishes whether the measurement store already supports time-bounded queries over a trailing window, and which metric categories (throughput, latency) have separate storage structures \u2014 context needed to determine whether the 30-day window and per-metric sub-score design are consistent with how measurements are physically available.",
+          "source": "nugget:e807a967-3cf6-4ff1-a865-f954621298ae [external:horizon-v2-microservices]; nugget:f1ca10e2-e8a8-4c9b-af6a-733ffd7e72c3 [external:casas-architecture]; nugget:1368a70e-a725-40e9-b2c4-106eab36edc0 [external:horizon-v2-microservices]",
+          "summary": "Download and upload throughput measurements and latency/RTT measurements are stored in separate fact tables in the connectivity measurement store. All measurement tables support time-bounded queries, making it possible to restrict aggregation to a trailing window such as the last 30 days. Specific field names within those tables are not enumerated in the knowledge base."
+        },
+        {
+          "relevance": "Answers spec question: Does the connectivity service require API-key authentication (or other auth) on its /api/v1 REST endpoints? What is the auth/permission model?",
+          "source": "nugget:d28d3c2a-663f-4c0c-9493-b12ab271c434 [external:horizon-v2-microservices]; nugget:695338a5-b68e-462c-8fa7-a525fffaa619 [external:horizon-v2-microservices]",
+          "summary": "The connectivity service enforces API key authentication on its /api/v1 endpoints, with authentication enabled in production and disabled in local/development environments. Per-IP rate limiting is also applied. In production, the service sits behind an API gateway that enforces per-operator API key authentication at the gateway tier."
+        },
+        {
+          "relevance": "Answers spec question: Are there existing score, health, or quality-rating endpoints in the connectivity service (e.g. /api/v1/fleet/health) whose response shape or semantics this new endpoint should align with?",
+          "source": "nugget:8e96c34d-5396-4cd7-be94-3d8607e48502 [external:horizon-v2-microservices]; nugget:da51b767-839e-4fec-a623-9cd0faa42ee4 [external:horizon-v2-microservices]; nugget:1b78e00c-8a08-49e2-8db8-05f5cf67e101 [external:horizon-v2-microservices]",
+          "summary": "The connectivity service has an existing fleet-level health endpoint whose response shape and semantics the new per-customer score endpoint should align with. The service follows a standard error envelope format. The detailed response shape of the existing fleet health endpoint is not recorded in the knowledge base."
+        },
+        {
+          "relevance": "Answers spec question: Is there a defined latency or performance budget for connectivity REST API read endpoints that query BigQuery?",
+          "source": "nugget:4ff11db3-05c6-49ad-9d0a-641c42e82227 [external:casas-architecture]; nugget:d100b0b8-b3f4-42b6-b7b0-ce273a38ed17 [external:casas-architecture]",
+          "summary": "No connectivity-service-specific read latency budget is recorded for measurement-aggregation endpoints. Adjacent targets from the architecture: Touchpoint APIs are targeted at p95 < 500 ms / p99 < 1000 ms / 99.9% uptime; a separate speed-test NFR requires measurement results to be available near real-time after test completion, but sets no read-query response time."
+        }
+      ],
+      "compliance_constraints": [
+        {
+          "applies_because": "The endpoint accepts a customer_id path parameter to return a scored view of that customer's broadband measurements \u2014 introducing a customer-identified data access surface subject to GDPR data-handling obligations that apply per OpCo market across all connectivity APIs (CON-004-03, CON-009-005).",
+          "namespace": "compliance",
+          "value": "gdpr"
+        },
+        {
+          "applies_because": "The Connectivity service's established data profile carries no PII in probe data (device IDs only); this endpoint extends that profile to expose a derived score keyed by customer_id, requiring that only the necessary customer-identifying data is processed over the 30-day window and that no raw or excess personal data is returned.",
+          "namespace": "compliance",
+          "value": "gdpr-data-minimisation"
+        },
+        {
+          "applies_because": "A core connectivity principle is that operator customer IDs must never be exposed to third parties via TCId abstraction; the endpoint's use of a customer identifier in the path and response must respect this boundary so internal identifiers are not leaked across OpCo trust domains.",
+          "namespace": "domain",
+          "value": "casas-tcid-abstraction"
+        },
+        {
+          "applies_because": "ADR-C020 mandates per-OpCo data isolation for all customer data; the connectivity-score endpoint returns per-customer data that must be scoped and isolated to the originating OpCo market so a query in one market cannot resolve data belonging to another.",
+          "namespace": "domain",
+          "value": "casas-per-opco-data-isolation"
+        },
+        {
+          "applies_because": "The score is derived from SamKnows broadband measurements, a regulated measurement approach subject to UK Ofcom approval (CON-ST-002, NFR-ST-007); any API surface that surfaces derived outputs from this measurement data inherits the obligation that the underlying measurement methodology is Ofcom-compliant.",
+          "namespace": "compliance",
+          "value": "ofcom"
+        }
+      ],
+      "correlation_id": "feat-b7fcdbc2",
+      "created_at": "2026-07-24T15:06:58Z",
+      "created_by": "mehrasaiyam",
+      "finalized_at": "2026-07-24T15:27:49Z",
+      "finalized_version": 5,
+      "intent": "Add GET /api/v1/customer/{customer_id}/connectivity-score to the connectivity service returning a 0-100 score and status from the customer's last 30 days of SamKnows measurements",
+      "intent_kind": "new_feature",
+      "out_of_scope": [
+        "Discovering the network topology behind a customer - i.e. resolving which probe, device, or line a customer maps to - via an external identity or inventory service. The endpoint operates only on measurements already tagged with the supplied customer identifier; it does not thereby waive the data-governance obligations that apply to handling that identifier and its data.",
+        "Changing how SamKnows measurements are ingested, enriched, or tagged with a customer identifier.",
+        "Historical trends, time-series, or per-day score breakdowns - the endpoint returns a single current rollup only.",
+        "Scoring metric types other than download speed, upload speed, and latency (for example jitter, packet loss, MOS, or disconnection events).",
+        "Any UI, dashboard, or visualisation surface for the score - this is an API-only capability.",
+        "Caller-tunable weights or band thresholds - the weighting and banding are fixed by this specification, not configurable per request.",
+        "Ranking or comparing customers against one another or against a fleet-wide distribution."
+      ],
+      "outcomes": [
+        "A caller can request the connectivity score for a given customer identifier and receives a numeric score in the range 0-100 together with a status label.",
+        "The status label is exactly one of four values - excellent, good, degraded, critical - derived from the score using upper-inclusive bands: score >= 80 is excellent, 60 <= score < 80 is good, 40 <= score < 60 is degraded, and score < 40 is critical.",
+        "The score reflects only measurements whose test time falls within the trailing 30-day window ending at the time of the request; measurements older than 30 days do not influence it.",
+        "The score is a weighted combination of the customer's download speed, upload speed, and latency, weighted 50%, 30%, and 20% respectively.",
+        "Each of the three metrics is normalised to a 0-100 sub-score based on measured performance relative to the customer's provisioned service level for the speed metrics and relative to a latency target for the latency metric, so a customer meeting their provisioned service scores near the top of the range regardless of their plan tier.",
+        "When the window contains some but not all three metric types, the score is computed from the metric types actually present, with the weights redistributed proportionally across the available metrics.",
+        "When no measurements of any type exist for the customer within the 30-day window, the request returns a 404 not-found response identifying the customer, rather than a score.",
+        "For the same customer, window, and underlying measurement data, repeated requests return the same score and status (the computation is deterministic).",
+        "The response conveys the customer identifier, the score, the status, the window it covers, and the per-metric sub-scores together with how many measurements each sub-score is based on, so a caller can interpret and justify the score without a second request.",
+        "The endpoint enforces the same authentication and rate-limiting regime as the service's existing read endpoints, introducing no weaker access path to customer measurement data.",
+        "Under expected load the endpoint meets a p95 response-time budget of under 1 second and a p99 of under 2 seconds, inclusive of the 30-day measurement aggregation.",
+        "A request resolves only measurements belonging to the requester's own operator/market context; data belonging to another operator is never returned or allowed to influence a customer's score, even if a customer identifier were to collide across operators.",
+        "The endpoint returns only derived and aggregate values (the score, status, per-metric sub-scores, measurement counts, the supplied customer identifier, and the window); it exposes no raw underlying measurement records and no additional personal data about the customer beyond the identifier the caller supplied.",
+        "The customer identifier is treated as an opaque token supplied by the caller; the endpoint's response leaks no internal operator identifiers, device or line identifiers, or identifiers belonging to any other operator."
+      ],
+      "parent_version": 4,
+      "problem": "Operators and care agents need a single, at-a-glance measure of an individual customer's recent broadband quality, but the connectivity service exposes no per-customer rollup. It ingests test measurements and surfaces raw records and fleet-level health, so answering \"how is this customer's connection doing?\" today means inspecting raw speed/latency rows or fleet dashboards. There is no way to get a single bounded score and a plain-language status for one customer over their recent measurement history.",
+      "project": "casas/connectivity",
+      "rejection_reason": null,
+      "service": "Connectivity Service (Horizon v2)",
+      "spec_id": "spec-7aeea9f3",
+      "state": "submit",
+      "title": "Customer connectivity score endpoint",
+      "unsealed_changes": false,
+      "updated_at": "2026-07-24T15:27:49Z",
+      "users": [
+        "Care agents and operator support staff who need a quick, plain-language verdict on a specific customer's connection quality during a support interaction.",
+        "Operator-facing systems and dashboards that display or triage individual customer connection health and need a single score to drive that view.",
+        "Downstream automation (alerting, prioritisation) that acts on a customer's current connectivity standing."
+      ],
+      "version": 5
+    },
+    "submission": {
+      "acms": {
+        "ok": true,
+        "version": 1
+      },
+      "attempted_at": "2026-07-24T15:27:52Z",
+      "error": null,
+      "spec_id": "spec-7aeea9f3",
+      "status": "ok"
+    }
+  },
+  "spec_id": "spec-7aeea9f3"
+}

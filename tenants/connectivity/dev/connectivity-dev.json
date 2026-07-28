@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "1.0",
+  "service": "connectivity",
+  "environment": "dev",
+  "project_id": "prj-d-srdl-casas-4zrs",
+  "region": "europe-west2",
+
+  "artifact_registry": {
+    "images": { "format": "DOCKER" }
+  },
+
+  "cloud_run": {
+    "api": {
+      "image": "gcr.io/cloudrun/hello",
+      "port": 8001,
+      "cpu": "1",
+      "memory": "512Mi",
+      "min_instances": 1,
+      "max_instances": 3,
+      "invoker_iam_disabled": true,
+      "env": {
+        "SERVICE_NAME": "connectivity",
+        "LOG_LEVEL": "INFO",
+        "CONNECTIVITY_BQ_ADAPTER": "mock"
+      }
+    }
+  }
+}

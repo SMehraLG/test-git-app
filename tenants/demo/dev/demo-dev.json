@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "1.0",
+  "service": "demo",
+  "environment": "dev",
+  "project_id": "prj-d-srdl-casas-4zrs",
+  "region": "europe-west2",
+
+  "artifact_registry": {
+    "images": { "format": "DOCKER" }
+  },
+
+  "cloud_run": {
+    "api": {
+      "image": "gcr.io/cloudrun/hello",
+      "port": 8080,
+      "cpu": "1",
+      "memory": "512Mi",
+      "min_instances": 3,
+      "max_instances": 5,
+      "invoker_iam_disabled": true,
+      "env": {
+        "SERVICE_NAME": "demo",
+        "LOG_LEVEL": "INFO"
+      }
+    }
+  },
+
+  "redis": {
+    "cache": { "tier": "BASIC", "memory_size_gb": 1 }
+  },
+
+  "cloud_sql": {
+    "main": {
+      "version": "POSTGRES_16",
+      "tier": "db-custom-1-3840",
+      "database_name": "demo",
+      "database_user": "demo",
+      "disk_size": 10
+    }
+  },
+
+  "buckets": {
+    "assets": { "location": "europe-west2", "lifecycle_delete_days": 30 }
+  },
+
+  "vertex_ai": { "location": "europe-west1" }
+}

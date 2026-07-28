@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>plan-3034be54</title>
+  <style>
+    :root {
+      --text:       #1f2328;
+      --muted:      #57606a;
+      --border:     #d0d7de;
+      --border-soft:#eaeef2;
+      --bg:         #ffffff;
+      --bg-subtle:  #f6f8fa;
+      --bg-code:    #eef1f5;
+      --link:       #0969da;
+      --accent:     #218bff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --text:       #e6edf3;
+        --muted:      #8b949e;
+        --border:     #30363d;
+        --border-soft:#21262d;
+        --bg:         #0d1117;
+        --bg-subtle:  #161b22;
+        --bg-code:    #1f242c;
+        --link:       #58a6ff;
+        --accent:     #1f6feb;
+      }
+    }
+    html { font-size: 16px; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                   "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 1rem;
+      line-height: 1.75;
+      color: var(--text);
+      background: var(--bg);
+      max-width: 820px;
+      margin: 3rem auto;
+      padding: 0 2rem 6rem;
+      word-wrap: break-word;
+      -webkit-text-size-adjust: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.3;
+      margin-top: 2.4em;
+      margin-bottom: 0.6em;
+      font-weight: 600;
+    }
+    h1:first-child { margin-top: 0; }
+    h1 { font-size: 2rem;   padding-bottom: 0.3em;
+          border-bottom: 1px solid var(--border); }
+    h2 { font-size: 1.5rem; padding-bottom: 0.2em;
+          border-bottom: 1px solid var(--border-soft); }
+    h3 { font-size: 1.2rem; color: var(--muted); }
+    h4 { font-size: 1.05rem; color: var(--muted); }
+    p  { margin: 1em 0; }
+    a  { color: var(--link); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    ul, ol { padding-left: 1.6em; margin: 1em 0; }
+    li { margin: 0.45em 0; }
+    li > ul, li > ol { margin: 0.4em 0; }
+    li > p { margin: 0.4em 0; }
+    strong { color: var(--text); font-weight: 600; }
+    code {
+      font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo,
+                   Consolas, "Liberation Mono", monospace;
+      font-size: 0.88em;
+      background: var(--bg-code);
+      padding: 0.15em 0.42em;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    pre {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-soft);
+      padding: 1em 1.2em;
+      overflow-x: auto;
+      border-radius: 6px;
+      line-height: 1.55;
+      font-size: 0.92em;
+      margin: 1.3em 0;
+    }
+    pre code {
+      background: transparent;
+      padding: 0;
+      font-size: inherit;
+      white-space: pre;
+    }
+    table {
+      border-collapse: collapse;
+      margin: 1.3em 0;
+      width: 100%;
+      font-size: 0.96em;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 0.55em 0.9em;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: var(--bg-subtle); font-weight: 600; }
+    blockquote {
+      border-left: 3px solid var(--accent);
+      margin: 1.2em 0;
+      padding: 0.5em 1.2em;
+      color: var(--muted);
+      background: var(--bg-subtle);
+      border-radius: 0 6px 6px 0;
+    }
+    blockquote p:first-child { margin-top: 0; }
+    blockquote p:last-child { margin-bottom: 0; }
+    hr {
+      border: 0;
+      height: 1px;
+      background: var(--border-soft);
+      margin: 2.5em 0;
+    }
+    /* Frontmatter parsed out of YAML and laid out as a metadata block */
+    .casas-frontmatter {
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      column-gap: 1.2em;
+      row-gap: 0.35em;
+      margin: 0 0 2.5rem 0;
+      padding: 1em 1.2em;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-soft);
+      border-radius: 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.82rem;
+    }
+    .casas-frontmatter dt { color: var(--muted); margin: 0; }
+    .casas-frontmatter dd { color: var(--text); margin: 0;
+                             word-break: break-all; }
+    .casas-frontmatter dd.null-val { color: var(--muted);
+                                       font-style: italic; }
+  </style>
+</head>
+<body>
+<dl class="casas-frontmatter"><dt>contract_version</dt><dd>1.0</dd><dt>plan_id</dt><dd>plan-3034be54</dd><dt>correlation_id</dt><dd>feat-b7fcdbc2</dd><dt>version</dt><dd>2</dd><dt>parent_id</dt><dd>plan-3034be54@1</dd><dt>plan_verdict</dt><dd>compliant</dd><dt>created_by</dt><dd>mehrasaiyam</dd><dt>created_at</dt><dd>2026-07-24T15:47:53Z</dd><dt>service</dt><dd>Connectivity Service (Horizon v2)</dd><dt>intent_kind</dt><dd>new_feature</dd><dt>spec_id</dt><dd>spec-7aeea9f3</dd><dt>approver</dt><dd class="null-val">null</dd><dt>approved</dt><dd class="null-val">null</dd></dl>
+<h1 id="plan-customer-connectivity-score-endpoint">Plan: Customer connectivity score endpoint</h1>
+<h2 id="summary">Summary</h2>
+<p>Implement GET /api/v1/customer/{customer_id}/connectivity-score in the FastAPI connectivity service (services/connectivity). A pure scoring module normalises download speed (fact_httpget.speed_mbps vs provisioned_mbps), upload speed (fact_httppost.speed_mbps vs provisioned_mbps), and latency (fact_udplatency.rtt_avg_ms vs a configured target) to 0-100 sub-scores, combines them 50/30/20, applies upper-inclusive bands (&gt;=80 excellent, 60-&lt;80 good, 40-&lt;60 degraded, &lt;40 critical), and reweights proportionally when a metric type is absent. A score service issues operator-scoped, 30-day partition-pruned BigQuery aggregation queries and delegates to the scorer; the route returns a derived-only DTO or 404 when no measurements exist. A minimal security module adds API-key auth, per-IP rate limiting, and PII redaction so the new route matches the service baseline and honours GDPR/per-OpCo obligations.</p>
+<h2 id="linked-spec">Linked spec</h2>
+<p><code>spec-7aeea9f3</code> — Customer connectivity score endpoint</p>
+<h2 id="tasks">Tasks</h2>
+<ul>
+<li><strong>T-01:</strong> Add pure scoring module: normalisation, 50/30/20 weighting, upper-inclusive bands, proportional reweighting</li>
+</ul>
+<p>New module src/connectivity/scoring.py with pure, I/O-free functions. Normalise each metric to a 0-100 sub-score: speed metrics as capped ratio of measured to provisioned throughput; latency as measured rtt against a configured latency target (lower is better). Combine sub-scores with fixed weights download=0.5, upload=0.3, latency=0.2. Derive the status label with upper-inclusive bands (&gt;=80 excellent, 60-&lt;80 good, 40-&lt;60 degraded, &lt;40 critical). When one or two metric types are absent, renormalise the present weights so they sum to 1 and score on those only. Deterministic: no clock/random inputs. Weights and band thresholds are module constants, not request-configurable.</p>
+<ul>
+<li><strong>T-02:</strong> Add score response DTO models projecting only derived/aggregate fields</li>
+</ul>
+<p>New module src/connectivity/models/score.py with Pydantic response models: overall score (0-100), status label, window bounds (start/end), per-metric block (sub_score + sample_count) for download/upload/latency, and an echo of the supplied customer identifier. The DTO exposes only derived/aggregate values; it has no field for raw measurement rows, device/line identifiers, or internal operator identifiers, enforcing data minimisation at the serialisation boundary.</p>
+<ul>
+<li><strong>T-03:</strong> Add security module: API-key auth dependency, per-IP rate limiter, and structlog PII-redaction processor</li>
+</ul>
+<p>New package src/connectivity/security/ providing: (a) a FastAPI dependency that validates an API key by SHA-256 hash with constant-time comparison, active only when CONNECTIVITY_API_KEY_ENABLED is true; (b) a per-IP token-bucket rate limiter (60 tokens, 10s refill) applied as a dependency/middleware, gated by CONNECTIVITY_RATE_LIMIT_ENABLED; (c) a structlog processor that redacts/omits customer_id (and other PII keys) from log events before the JSON sink. Reusable across /api/v1 routes so the new endpoint introduces no weaker access path.</p>
+<ul>
+<li><strong>T-04:</strong> Add settings fields for auth, rate limiting, operator-key mapping, and latency target</li>
+</ul>
+<p>Extend src/connectivity/config/settings.py (CONNECTIVITY_ prefix) with: api_key_enabled (bool, default false), api_key_sha256 (hashed key), rate_limit_enabled (bool, default true) plus bucket capacity/refill, an api-key-to-operator/market mapping used to derive request operator scope, and latency_target_ms used by the scorer. No secrets committed; production values arrive as Cloud Run env vars from Secret Manager.</p>
+<ul>
+<li><strong>T-05:</strong> Add score service: operator-scoped, partition-pruned BigQuery aggregation delegating to the scorer</li>
+</ul>
+<p>New module src/connectivity/services/score_service.py. Resolve the operator/market from the authenticated request context (api-key-&gt;operator mapping) and inject it as a mandatory predicate. For each of fact_httpget, fact_httppost, fact_udplatency, issue a parameterized BigQuery aggregation query filtered by customer_id, a trailing-30-day dtime_utc cutoff (partition pruning), and the operator predicate, projecting only AVG(speed_mbps)/AVG(provisioned_mbps)/AVG(rtt_avg_ms) and COUNT plus min/max dtime for the window. Apply defensive in-memory re-filtering on customer_id/window/operator so results are correct even against an adapter that ignores query params (the mock). Pass the aggregates to scoring.py. Raise a not-found signal when all three counts are zero. The customer_id path parameter is treated as an opaque measurement-lookup token: it is used only as a query filter value and is never joined against or resolved through any internal operator/customer identity table (no TCId or identity resolution is performed).</p>
+<ul>
+<li><strong>T-06:</strong> Add and register the connectivity-score GET route wiring auth, rate limit, operator scope, and score service</li>
+</ul>
+<p>New module src/connectivity/api/routes/score.py exposing GET /api/v1/customer/{customer_id}/connectivity-score under an APIRouter(prefix=/api/v1). Wire the API-key auth dependency, the per-IP rate limiter, the operator-context dependency, and the get_bq_adapter dependency; call the score service; return the DTO on success and a 404 (customer identified) when the service reports no measurements. Register the router in src/connectivity/main.py create_app().</p>
+<ul>
+<li><strong>T-07:</strong> Add unit and integration tests and confirm the 80% branch-coverage gate</li>
+</ul>
+<p>Add tests/test_scoring.py (unit, mocked/no I/O) covering normalisation, 50/30/20 weighting, boundary values at exactly 40/60/80, proportional reweighting for 1-2 metric types, and determinism; and tests/test_score_endpoint.py (integration, @pytest.mark.integration) driving the endpoint via httpx AsyncClient with get_bq_adapter overridden by a stub returning controlled aggregates: scored response, 404 on no measurements, partial-metric reweighting, per-operator isolation, auth enforced when enabled, and customer_id absent from emitted logs. Keep the default suite fast (mock the adapter) and ensure uv run pytest --cov --cov-branch --cov-fail-under=80 passes in services/connectivity.</p>
+<ul>
+<li><strong>T-08:</strong> Add load/performance test asserting p95&lt;1s and p99&lt;2s at 2x expected peak</li>
+</ul>
+<p>Add a performance/load test that owns the test_strategy performance scenario: drive the connectivity-score endpoint at 2x expected peak concurrent load against a production-like staging dataset (anonymised) and assert p95 &lt; 1s and p99 &lt; 2s inclusive of the 30-day aggregation. Runs in the CI performance stage, not the default unit/integration fast run.</p>
+<h2 id="test-strategy">Test strategy</h2>
+<h3 id="gherkin-scenarios">Gherkin scenarios</h3>
+<h4 id="g-01-task-t-01">G-01 — task T-01</h4>
+<ul>
+<li><strong>Given</strong> a composite score of exactly 80, then exactly 60, then exactly 40</li>
+<li><strong>When</strong> the status label is derived</li>
+<li><strong>Then</strong> the labels are excellent, good, and degraded respectively (upper-inclusive bands), and a score below 40 yields critical</li>
+</ul>
+<h4 id="g-02-task-t-01">G-02 — task T-01</h4>
+<ul>
+<li><strong>Given</strong> a customer with only download and latency sub-scores available (no upload)</li>
+<li><strong>When</strong> the composite score is computed</li>
+<li><strong>Then</strong> the download and latency weights are renormalised to sum to 1 (0.5 and 0.2 -&gt; ~0.714 and ~0.286) and the score uses only those two metrics</li>
+</ul>
+<h4 id="g-03-task-t-01">G-03 — task T-01</h4>
+<ul>
+<li><strong>Given</strong> measured throughput greater than or equal to provisioned throughput</li>
+<li><strong>When</strong> the speed metric is normalised</li>
+<li><strong>Then</strong> the sub-score is capped at 100 and never exceeds it</li>
+</ul>
+<h4 id="g-04-task-t-01">G-04 — task T-01</h4>
+<ul>
+<li><strong>Given</strong> an identical set of per-metric aggregates</li>
+<li><strong>When</strong> the score is computed multiple times</li>
+<li><strong>Then</strong> the numeric score and status are identical every time (deterministic)</li>
+</ul>
+<h4 id="g-05-task-t-02">G-05 — task T-02</h4>
+<ul>
+<li><strong>Given</strong> a successfully scored customer</li>
+<li><strong>When</strong> the response is serialised</li>
+<li><strong>Then</strong> the payload contains only the customer identifier echo, score, status, window bounds, and per-metric sub_score plus sample_count, and contains no raw measurement rows or internal device/line/operator identifiers</li>
+</ul>
+<h4 id="g-06-task-t-05">G-06 — task T-05</h4>
+<ul>
+<li><strong>Given</strong> the customer has measurements dated both within and older than the trailing 30-day window</li>
+<li><strong>When</strong> the score service aggregates measurements</li>
+<li><strong>Then</strong> only measurements within the 30-day window contribute to the sub-scores</li>
+</ul>
+<h4 id="g-07-task-t-05">G-07 — task T-05</h4>
+<ul>
+<li><strong>Given</strong> a customer with no measurements of any type in the 30-day window</li>
+<li><strong>When</strong> the connectivity score is requested</li>
+<li><strong>Then</strong> the endpoint returns a 404 not-found response that identifies the customer, not a score</li>
+</ul>
+<h4 id="g-08-task-t-06">G-08 — task T-06</h4>
+<ul>
+<li><strong>Given</strong> a customer identifier that exists under operator B while the request is authenticated as operator A</li>
+<li><strong>When</strong> the connectivity score is requested</li>
+<li><strong>Then</strong> operator B measurements are never returned or reflected in the score (the request is scoped to operator A only)</li>
+</ul>
+<h4 id="g-09-task-t-06">G-09 — task T-06</h4>
+<ul>
+<li><strong>Given</strong> CONNECTIVITY_API_KEY_ENABLED is true</li>
+<li><strong>When</strong> the endpoint is called with a missing or invalid API key, then with a valid key</li>
+<li><strong>Then</strong> the invalid call is rejected before any measurement query and the valid call returns the scored response</li>
+</ul>
+<h4 id="g-10-task-t-03">G-10 — task T-03</h4>
+<ul>
+<li><strong>Given</strong> a request carrying a customer identifier</li>
+<li><strong>When</strong> the handler emits structured logs</li>
+<li><strong>Then</strong> the customer_id value does not appear in the emitted log records</li>
+</ul>
+<h3 id="coverage-notes">Coverage notes</h3>
+<p>Unit tests mock the BigQuery adapter and exercise scoring.py directly; integration tests drive the endpoint via httpx AsyncClient with get_bq_adapter overridden by a stub. CI gate: uv run pytest --cov --cov-branch --cov-fail-under=80 in services/connectivity; &gt;=90% coverage target on changed code. Integration tests are marked @pytest.mark.integration and segregated from the default fast run per CASAS pytest conventions.</p>
+<h3 id="performance-tests">Performance tests</h3>
+<ul>
+<li>Load test the endpoint at 2x expected peak concurrent load asserting p95 &lt; 1s and p99 &lt; 2s inclusive of the 30-day aggregation, against a production-like staging dataset with anonymised data.</li>
+</ul>
+<h2 id="nfr-mechanisms">NFR mechanisms</h2>
+<ul>
+<li>Meet the p95&lt;1s / p99&lt;2s budget by issuing parameterized BigQuery aggregation queries with a trailing-30-day dtime_utc partition-pruning predicate so only in-range day-partitions of the fact tables are scanned, and computing AVG/COUNT server-side rather than fetching raw rows.</li>
+<li>Guarantee determinism (same inputs -&gt; same score) using fixed weight constants (0.5/0.3/0.2), deterministic proportional reweighting, and upper-inclusive band thresholds, with no clock- or random-dependent input beyond the request-time window bound.</li>
+<li>Enforce GDPR data minimisation by projecting only aggregate/derived columns in the BigQuery SELECT and serialising a response DTO with no fields for raw measurement rows, device/line identifiers, or internal operator identifiers.</li>
+<li>Enforce per-OpCo isolation by deriving the operator/market from the authenticated API key and injecting it as a mandatory WHERE predicate on every measurement query (query-side, not post-fetch), so a customer_id collision across operators cannot resolve another operator's data.</li>
+<li>Preserve auth and rate-limit parity by applying the SHA-256 constant-time API-key dependency (gated by CONNECTIVITY_API_KEY_ENABLED) and the per-IP token-bucket limiter (60 tokens / 10s refill) to the new route, and redacting customer_id from structlog output via a PII-redaction processor.</li>
+<li>Expose the endpoint only behind the UC-C-004 API gateway, which enforces OAuth 2.0/OIDC per-consumer authorisation upstream using each market's per-OpCo OAuth provider configuration (CON-004-02); the service-level SHA-256 constant-time API-key dependency is the second defence-in-depth layer, so the route is never reachable without gateway auth.</li>
+<li>Run the Cloud Run container as a non-root user (Dockerfile USER directive) so the new endpoint inherits the platform's non-root execution baseline.</li>
+<li>Emit structured JSON logs enriched with Cloud Trace-correlated trace and span IDs plus request metadata (method, path, status, latency), and propagate OpenTelemetry spans to Cloud Trace for the new route, matching the service observability baseline (customer_id stays redacted via the PII processor).</li>
+</ul>
+<h2 id="rollout-migration-rollback">Rollout / Migration / Rollback</h2>
+<h3 id="rollout">Rollout</h3>
+<p>Deploy through the existing Horizon v2 per-service path-filtered GitHub Actions workflow for services/connectivity: build an image tagged with the commit SHA, push to Artifact Registry via Workload Identity Federation (no key files), and roll out on Cloud Run as a canary 0% -&gt; 10% -&gt; 50% -&gt; 100% with /health and /ready smoke-test gates between steps. The new GET route is purely additive, so no existing traffic path changes. API-key auth stays disabled in dev (CONNECTIVITY_API_KEY_ENABLED=false) and enabled in production behind the API gateway.</p>
+<h3 id="migration">Migration</h3>
+<p>n/a - no schema or data migration. The endpoint only reads existing SamKnows fact tables (fact_httpget, fact_httppost, fact_udplatency); it adds no columns and writes no rows. New configuration (hashed API key, rate-limit params, api-key-&gt;operator mapping, latency target) is delivered as Cloud Run env vars sourced from Secret Manager, never committed to Git.</p>
+<h3 id="rollback">Rollback</h3>
+<p>Roll back by promoting the previous Cloud Run revision (the prior immutable image digest retained in Artifact Registry), target &lt;15 minutes; because the change is an additive, read-only GET route with no migration, rollback is a pure revision switch with no data cleanup and the route simply disappears. Rollback triggers: sustained endpoint error rate &gt;1% or p99 &gt;2s. Designated rollback owner: the connectivity service on-call/service owner initiates and verifies the revision switch. The rollback path is rehearsed in dev/staging before any production promotion (revert-to-previous-revision drill run as part of the canary gate). The route can additionally be disabled without a redeploy by toggling its registration/config flag off.</p>
+<h2 id="reviews">Reviews</h2>
+<h3 id="cost-notes">Cost notes</h3>
+<p>Marginal cost is one BigQuery aggregation query per request over at most 30 day-partitions across up to three fact tables, bounded by the p95&lt;1s budget via partition pruning. No new always-on infrastructure: reuses the existing Cloud Run service and BigQuery dataset.</p>
+<h3 id="security-notes">Security notes</h3>
+<p>Adds a read surface keyed by customer_id (personal data). Mitigated by defence-in-depth: the route is reachable only behind the UC-C-004 API gateway (OAuth 2.0/OIDC per-consumer auth, per-OpCo OAuth provider config CON-004-02) plus a service-level SHA-256 constant-time API-key dependency, per-IP rate limiting, query-side operator scoping, PII redaction in logs, non-root container execution, and a response DTO that leaks no internal identifiers.</p>
+<h3 id="privacy-notes">Privacy notes</h3>
+<p>customer_id is personal data under GDPR; processing is minimised to a 30-day derived aggregate with no raw records returned, customer_id redacted from logs, and access isolated per operator/market.</p>
+<h3 id="data-notes">Data notes</h3>
+<p>Reads existing day-partitioned fact tables and aggregates AVG(speed_mbps)/AVG(provisioned_mbps)/AVG(rtt_avg_ms) and COUNT within the window; performs no writes and creates no tables. The customer_id is an opaque query-filter token, never joined against or resolved through an internal identity table (no TCId resolution). Operator/market scope is a mandatory query-side predicate sourced from the authenticated context, never from customer_id.</p>
+<h3 id="infra-notes">Infra notes</h3>
+<p>No new infrastructure resources; deploy via the existing Terraform-managed Cloud Run service and per-service CI workflow, with secrets from Secret Manager and non-root container execution. The existing /health and /ready probes are reused as canary smoke-test gates. Observability: structured JSON logs with Cloud Trace-correlated trace/span IDs and request metadata, plus OpenTelemetry spans exported to Cloud Trace. Rollback is rehearsed in staging with a designated service-owner as rollback owner.</p>
+<h3 id="mitigations">Mitigations</h3>
+<ul>
+<li>Operator scope is enforced as a mandatory query-side WHERE predicate, not post-fetch filtering, so a Python-side bug cannot leak cross-operator data.</li>
+<li>Defensive in-memory re-filtering on customer_id/window/operator guards against an adapter that returns extra rows (e.g. the in-memory mock).</li>
+<li>Auth and rate-limiting are attached as route dependencies so the endpoint cannot be served without them when enabled.</li>
+</ul>
+<h2 id="acms-applicable-standards">ACMS applicable standards</h2>
+<ul>
+<li>[data_and_storage] standard_id <code>00c0c2e9-da3a-41b8-9903-c2e5b77f4043</code> (must) — enforces: Every BigQuery query aggregating connectivity measurements must include a mandatory operator/market tenant filter derived from the authenticated request context (not the caller-supplied customer_id), so cross-OpCo measurement data can never be accessed in a single query. Evidence: C003 Authoritative Database Pattern mandates per-operator data isolation for all new microservices; ADR-C020 v2 confirms CNX uses per-OpCo physical isolation; multi-tenancy principle requires country+operator+brand filtering on all data.</li>
+<li>[data_and_storage] standard_id <code>e807a967-3cf6-4ff1-a865-f954621298ae</code> (must) — enforces: The BigQuery aggregation query for the 30-day measurement window must use a _PARTITIONTIME or equivalent partition-pruning predicate against the day-partitioned connectivity_metrics fact tables to avoid full-table scans and satisfy the p95 &lt; 1s response-time budget. Evidence: Horizon v2 - Connectivity Service documents that all 11 connectivity_metrics BigQuery tables are partitioned by day; unpartitioned scans over a 30-day window would violate the p95 SLA.</li>
+<li>[data_and_storage] standard_id <code>7fa65394-8a57-4f40-8d6b-24e0db39b21f</code> (must) — enforces: The BigQuery SELECT list and the API response DTO must project only aggregate/derived columns (weighted score, per-metric sub-scores, measurement counts, window bounds, customer_id echo) - raw measurement records, probe identifiers, device IDs, and internal operator identifiers must be excluded from both the query result and the response payload. Evidence: Horizon v2 - Common Patterns states Connectivity carries no PII in probe data and mandates PII handling per service; spec outcomes 13-14 require data minimisation and opaque customer_id; GDPR-data-minimisation constraint applies.</li>
+<li>[data_and_storage] standard_id <code>5c2842c1-5948-4b0a-94c8-758dbafa1b42</code> (must) — enforces: The operator/market context used to scope the BigQuery query must be sourced exclusively from the authenticated request token (the API key OpCo binding per ADR-C020 v2), never from the caller-supplied customer_id path parameter, so a customer_id collision across OpCos cannot resolve another operator's data. Evidence: ADR-C020 v2 specifies per-OpCo instances with namespace per OpCo and OpCo-keyed credentials as the physical isolation mechanism; spec outcome 12 requires resolution to the requester's own operator/market context.</li>
+<li>[data_and_storage] standard_id <code>28b99619-8130-4715-b3c4-44918fcd6f24</code> (should) — enforces: The plan must document that the customer_id accepted in the path parameter is treated as an opaque measurement-lookup token and is never joined or resolved against an internal operator customer identity table - no TCId or internal identifier resolution is performed by the score query. Evidence: Connectivity Architect principles state TCId abstraction must never expose operator customer IDs to third parties; spec out-of-scope confirms no external identity resolution, but the plan must make the data access pattern explicit.</li>
+<li>[infra_and_deploy] standard_id <code>ba2baa92-726e-4348-848e-cba81e86f6d0</code> (must) — enforces: Deploy new connectivity-score endpoint via the Horizon v2 GitHub Actions canary rollout: build image tagged with commit SHA, resolve immutable digest, deploy at 0% traffic, promote 10%-&gt;50%-&gt;100% with /health smoke-test gates, auto-rollback to previous revision on any smoke-test failure. Evidence: Nugget ba2baa92 from 'Horizon v2 - Common Patterns' (casas-horizon-v2/docs/patterns.md) mandates the canary rollout as the standard deployment strategy for all Horizon v2 services including Connectivity.</li>
+<li>[infra_and_deploy] standard_id <code>48093441-aec0-43ae-9963-df83df5016ac</code> (must) — enforces: All infrastructure changes for the new endpoint (Cloud Run config, scaling parameters, env vars, secret references) must be expressed as Terraform in services/connectivity/infra/ using the shared Terraform modules convention - no manual infra changes permitted. Evidence: Nugget 48093441 from 'casas-architecture/docs/0-architecture-governance/BUILD-GUIDELINES.md' mandates all MVE infrastructure as IaC in Git with no manual changes and shared Terraform module layout.</li>
+<li>[infra_and_deploy] standard_id <code>1fdafb14-c053-417c-bfb7-d02f857850a4</code> (must) — enforces: CI/CD workflow must authenticate to GCP via Workload Identity Federation (GitHub Actions -&gt; WIF -&gt; casas-deployer SA) with no service-account key files; image tagged with git SHA pushed to Artifact Registry at europe-west2-docker.pkg.dev. Evidence: Nugget 1fdafb14 from 'Horizon v2 - Architecture Overview' (casas-horizon-v2/docs/architecture.md) establishes WIF keyless auth and Artifact Registry as the mandatory GCP auth and image registry pattern for all three Horizon v2 services.</li>
+<li>[infra_and_deploy] standard_id <code>391a1e79-7216-4650-b36c-172cf4224ccc</code> (must) — enforces: Connectivity service must expose GET /health (liveness, always 200 {status: ok}) and GET /ready (readiness, checks BigQuery/backend dependencies, returns 503 if unhealthy) used by Cloud Run for traffic routing and as the canary smoke-test target. Evidence: Nugget 391a1e79 from 'Horizon v2 - Common Patterns' (casas-horizon-v2/docs/patterns.md) mandates both /health and /ready probes on every Horizon v2 service for Cloud Run lifecycle management.</li>
+<li>[infra_and_deploy] standard_id <code>d57b7c38-094e-4085-836b-ebe4aaf86d11</code> (must) — enforces: New endpoint must emit structlog GCP Cloud Logging JSON with trace IDs (Cloud Trace correlation) and request metadata (method, path, status, latency); OpenTelemetry tracing to Cloud Trace; Connectivity metrics surface via BigQuery-based analytics (not Prometheus). Evidence: Nugget d57b7c38 from 'Horizon v2 - Common Patterns' (casas-horizon-v2/docs/patterns.md) defines the shared observability standard for all Horizon v2 services and explicitly notes Connectivity relies on BigQuery-based analytics rather than a Prometheus endpoint.</li>
+<li>[infra_and_deploy] standard_id <code>9ab16b74-5bd3-4425-935c-e57829ff5f7b</code> (must) — enforces: Plan must include a validated rollback procedure: previous image digest accessible in Artifact Registry, rollback trigger criteria defined (e.g. error rate &gt;1%, p99 &gt;2s), designated rollback owner, estimated rollback time &lt;15 minutes, rollback tested in dev/staging before prod. Evidence: Nugget 9ab16b74 from 'casas-architecture/docs/0-architecture-governance/BUILD-GUIDELINES.md' mandates a validated rollback checklist for every MVE deployment including rollback-tested-in-staging and &lt;15-minute target.</li>
+<li>[infra_and_deploy] standard_id <code>d8208e76-df58-4aac-a9dc-bb7e68a7c061</code> (must) — enforces: CI/CD pipeline for the connectivity-score endpoint must use per-service path filtering in .github/workflows/ so only the connectivity service rebuilds and redeploys on a push to services/connectivity/. Evidence: Nugget d8208e76 from 'Horizon v2 - Repository Overview' (casas-horizon-v2/README.md) mandates unified pipelines with per-service path filtering as the standard CI/CD structure for the Horizon v2 monorepo.</li>
+<li>[infra_and_deploy] standard_id <code>4bb04b26-0c48-4d2c-9479-161a23abd4ae</code> (must) — enforces: Secrets (app keys, MQTT credentials, any new API keys for the score endpoint) must be stored in GCP Secret Manager and injected at runtime as Cloud Run env vars - never committed to Git; config changes (env vars, scaling) must trigger a new immutable deployment, not in-place modification. Evidence: Nugget 4bb04b26 from 'casas-architecture/docs/0-architecture-governance/BUILD-GUIDELINES.md' mandates secrets-separate-from-config, never-commit-secrets, and immutable deployments as BUILD-GUIDELINES config management principles.</li>
+<li>[security] standard_id <code>6f4761a0-c6ac-4e58-b096-b516d5c3e687</code> (must) — enforces: All requests to the connectivity-score endpoint must be authenticated via the UC-C-004 API Gateway using OAuth 2.0 / OIDC (SR-004-01) and per-consumer token-based authorisation (SR-004-02) before the handler receives control, The plan must explicitly route the new endpoint through the gateway Auth Middleware component - no direct backend exposure. Evidence: SR-004-01/02 (UC-C-004 connectivity API gateway functional requirements) mandate OAuth 2.0/OIDC authentication and per-consumer authorisation for all connectivity gateway endpoints; the spec requires the same auth regime as existing read endpoints.</li>
+<li>[security] standard_id <code>d28d3c2a-663f-4c0c-9493-b12ab271c434</code> (must) — enforces: The Connectivity service-side auth middleware must validate API keys using SHA-256 hashing with constant-time comparison before any handler logic executes, Plan must name the auth middleware module and the constant-time comparison function used. Evidence: Horizon v2 - Common Patterns specifies Connectivity uses SHA-256-hashed API keys with constant-time comparison as its service-level auth method, the existing read-endpoint regime the spec requires this endpoint to inherit.</li>
+<li>[security] standard_id <code>792e5840-6a46-44cf-ba44-2e548e81ca65</code> (must) — enforces: The connectivity-score endpoint must inherit the Connectivity service token-bucket rate limiter scoped per-IP at 60 tokens with 10/s refill, Plan must confirm the rate-limiter middleware is applied to the new route with these parameters, or document a justified deviation. Evidence: Horizon v2 - Common Patterns: shared security baseline mandates token-bucket rate limiting per service; Connectivity's parameters are 60 tokens / 10 s refill per IP.</li>
+<li>[security] standard_id <code>5c2842c1-5948-4b0a-94c8-758dbafa1b42</code> (must) — enforces: The score handler must derive the operator context from the authenticated API key (per-OpCo key mapped to operator/market) and inject it as a mandatory filter on all database queries, No cross-operator measurement data may be reachable regardless of the customer_id path parameter value - isolation must be enforced query-side, not post-fetch. Evidence: ADR-C020 v2 per-layer isolation model mandates K8s namespace per OpCo and scoped data access; operator routing via Apigee key; the spec outcome requires data belonging to another operator must never be returned.</li>
+<li>[security] standard_id <code>892743de-26d1-41e8-b2c3-dae3dc831a2a</code> (must) — enforces: Structured logs emitted by the score handler must redact or omit the customer_id value (PII) - structlog must be configured with a PII-redaction processor before the GCP Cloud Logging JSON sink, Non-root container execution must be confirmed for the Cloud Run deployment of this service. Evidence: Horizon v2 - Common Patterns: shared security baseline requires PII redaction and non-root containers for all platform services; the score endpoint processes customer_id which is personal data under GDPR.</li>
+<li>[security] standard_id <code>f746d9ef-1817-4853-b0f1-08fb7224c1d7</code> (must) — enforces: The response serialiser must return only the derived/aggregate fields listed in the spec (score, status, sub-scores, counts, customer_id echo, window) and must actively strip any internal device identifiers, line IDs, or cross-operator identifiers before the response is returned, Plan must name the serialiser/schema layer and confirm no raw measurement fields or internal IDs are reachable via the response envelope. Evidence: CNX API per-OpCo isolation nugget documents the layered auth model where internal IDs are not surfaced; the spec outcome requires the endpoint to leak no internal operator identifiers, device or line identifiers.</li>
+<li>[security] standard_id <code>88e0ec5e-c892-4ecd-9141-4ce249733a5a</code> (should) — enforces: The plan must specify which per-OpCo OAuth provider configuration the score endpoint relies on - either confirming it inherits the gateway-level per-market OAuth config (CON-004-02) or documenting a justified alternative. Evidence: CON-004-02 (UC-C-004 gateway constraints): the gateway must support per-OpCo OAuth provider integration because each market runs its own IdP; applicable because the score endpoint sits behind the same gateway.</li>
+<li>[testing] standard_id <code>5ee87c4b-a0b5-4840-8c88-682aa436b98f</code> (must) — enforces: run uv run pytest --cov --cov-branch --cov-fail-under=80 in services/connectivity as the CI coverage gate, configure CI to fail the PR if branch coverage drops below 80% for the connectivity backend service. Evidence: Horizon v2 - Repository Overview names services/connectivity/backend as a per-service directory where the 80% branch-coverage gate is enforced via uv run pytest --cov --cov-branch --cov-fail-under=80.</li>
+<li>[testing] standard_id <code>bcde1b8d-f4e4-4055-aa62-64e60ef32624</code> (must) — enforces: use uv run pytest (not bare pytest) for all test invocations in the connectivity backend, lay out test files flat under tests/ with one concern per file (e.g. test_score.py), mark integration tests with @pytest.mark.integration and exclude from the default uv run pytest run. Evidence: CASAS Python testing conventions: uv run pytest convention, flat tests/ layout with one concern per file, @pytest.mark.integration marker + exclusion from default run.</li>
+<li>[testing] standard_id <code>86e155d5-6f9a-4896-a2c0-497dd4480fcf</code> (must) — enforces: implement unit tests covering all score-calculation logic (weight redistribution, band derivation, normalisation, 30-day window filtering) with &gt;80% code coverage, implement integration tests covering the connectivity-score API endpoint for all response shapes: scored response, 404 on no measurements, partial-metric redistribution, and per-operator isolation, implement a performance test exercising the endpoint at 2x expected peak concurrent load, asserting p95 &lt; 1s and p99 &lt; 2s inclusive of 30-day aggregation. Evidence: casas-architecture NFR-T001/NFR-T002 mandate unit &gt;80%, integration covering all API endpoints and DB ops, performance at 2x peak, and a production-equivalent staging environment; applies because the spec carries an explicit p95/p99 budget and per-operator isolation requirement.</li>
+<li>[testing] standard_id <code>dcc3a698-5d82-4bc2-aef2-94dbfbe3f98d</code> (should) — enforces: configure pytest-cov with --cov-fail-under=90 on changed code in the connectivity backend CI job, use uv run pytest --cov=connectivity --cov-report=term-missing --cov-fail-under=90 as the changed-code coverage command. Evidence: AGENT.md CI agent contract specifies &gt;=90% line coverage on changed code for Python services via pytest-cov; the per-service gate (5ee87c4b) sets 80% branch coverage as the hard blocker, with 90% changed-code as a strong preference.</li>
+<li>[testing] standard_id <code>95d55b6b-f6c1-4921-8a0b-000fa9dca66c</code> (should) — enforces: mock the database layer (measurement query and aggregation) in unit tests so tests are isolated and fast, test edge cases explicitly: customer with no measurements in window (expect 404), customer with only one or two metric types (expect proportional weight redistribution), score boundary values at exactly 40, 60, 80, mark any test touching a real database or external service as @pytest.mark.integration. Evidence: CASAS pytest DO/DON'T standard: mock external dependencies, test edge cases including boundaries, keep default suite fast by segregating slow tests.</li>
+</ul>
+<h2 id="compliance-verdicts">Compliance verdicts</h2>
+<ul>
+<li>security: not compliant (reason: Two must-severity security standards are unsatisfied: the plan does not confirm the UC-C-004 gateway OAuth 2.0/OIDC layer fronts the new route (6f4761a0), and the plan does not confirm non-root container execution for the Cloud Run deployment (892743de); one should-severity gap also exists - no per-OpCo OAuth provider config is named or justified (88e0ec5e)., route: plan_rework)</li>
+<li>data_and_storage: not compliant (reason: Four must-severity data_and_storage standards are satisfied by the plan's nfr_mechanisms and task descriptions, but the should-severity standard requiring the plan to explicitly document that customer_id is treated as an opaque measurement-lookup token with no identity-table join (28b99619) is not addressed anywhere in the plan body - T-05 or data_notes must be updated to state this data access pattern explicitly., route: plan_rework)</li>
+<li>infra_and_deploy: not compliant (reason: Two must-severity infra_and_deploy standards are unsatisfied: the plan lacks any task or mechanism for OpenTelemetry tracing / Cloud Trace correlation on the new endpoint (d57b7c38), and the rollback section omits a designated rollback owner and confirmation that rollback was tested in dev/staging before production (9ab16b74)., route: plan_rework)</li>
+<li>testing: not compliant (reason: Standard 86e155d5 (must) is partially unsatisfied: the performance test at 2x peak load is declared in test_strategy but is not assigned to any task in the task index (T-07 covers only unit and integration tests), creating an execution gap that requires plan_rework to assign or extend a task to own the performance test., route: plan_rework)</li>
+</ul>
+</body>
+</html>

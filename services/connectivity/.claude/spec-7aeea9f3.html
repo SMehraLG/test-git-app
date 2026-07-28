@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>spec-7aeea9f3</title>
+  <style>
+    :root {
+      --text:       #1f2328;
+      --muted:      #57606a;
+      --border:     #d0d7de;
+      --border-soft:#eaeef2;
+      --bg:         #ffffff;
+      --bg-subtle:  #f6f8fa;
+      --bg-code:    #eef1f5;
+      --link:       #0969da;
+      --accent:     #218bff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --text:       #e6edf3;
+        --muted:      #8b949e;
+        --border:     #30363d;
+        --border-soft:#21262d;
+        --bg:         #0d1117;
+        --bg-subtle:  #161b22;
+        --bg-code:    #1f242c;
+        --link:       #58a6ff;
+        --accent:     #1f6feb;
+      }
+    }
+    html { font-size: 16px; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                   "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 1rem;
+      line-height: 1.75;
+      color: var(--text);
+      background: var(--bg);
+      max-width: 820px;
+      margin: 3rem auto;
+      padding: 0 2rem 6rem;
+      word-wrap: break-word;
+      -webkit-text-size-adjust: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.3;
+      margin-top: 2.4em;
+      margin-bottom: 0.6em;
+      font-weight: 600;
+    }
+    h1:first-child { margin-top: 0; }
+    h1 { font-size: 2rem;   padding-bottom: 0.3em;
+          border-bottom: 1px solid var(--border); }
+    h2 { font-size: 1.5rem; padding-bottom: 0.2em;
+          border-bottom: 1px solid var(--border-soft); }
+    h3 { font-size: 1.2rem; color: var(--muted); }
+    h4 { font-size: 1.05rem; color: var(--muted); }
+    p  { margin: 1em 0; }
+    a  { color: var(--link); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    ul, ol { padding-left: 1.6em; margin: 1em 0; }
+    li { margin: 0.45em 0; }
+    li > ul, li > ol { margin: 0.4em 0; }
+    li > p { margin: 0.4em 0; }
+    strong { color: var(--text); font-weight: 600; }
+    code {
+      font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo,
+                   Consolas, "Liberation Mono", monospace;
+      font-size: 0.88em;
+      background: var(--bg-code);
+      padding: 0.15em 0.42em;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    pre {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-soft);
+      padding: 1em 1.2em;
+      overflow-x: auto;
+      border-radius: 6px;
+      line-height: 1.55;
+      font-size: 0.92em;
+      margin: 1.3em 0;
+    }
+    pre code {
+      background: transparent;
+      padding: 0;
+      font-size: inherit;
+      white-space: pre;
+    }
+    table {
+      border-collapse: collapse;
+      margin: 1.3em 0;
+      width: 100%;
+      font-size: 0.96em;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 0.55em 0.9em;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: var(--bg-subtle); font-weight: 600; }
+    blockquote {
+      border-left: 3px solid var(--accent);
+      margin: 1.2em 0;
+      padding: 0.5em 1.2em;
+      color: var(--muted);
+      background: var(--bg-subtle);
+      border-radius: 0 6px 6px 0;
+    }
+    blockquote p:first-child { margin-top: 0; }
+    blockquote p:last-child { margin-bottom: 0; }
+    hr {
+      border: 0;
+      height: 1px;
+      background: var(--border-soft);
+      margin: 2.5em 0;
+    }
+    /* Frontmatter parsed out of YAML and laid out as a metadata block */
+    .casas-frontmatter {
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      column-gap: 1.2em;
+      row-gap: 0.35em;
+      margin: 0 0 2.5rem 0;
+      padding: 1em 1.2em;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-soft);
+      border-radius: 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.82rem;
+    }
+    .casas-frontmatter dt { color: var(--muted); margin: 0; }
+    .casas-frontmatter dd { color: var(--text); margin: 0;
+                             word-break: break-all; }
+    .casas-frontmatter dd.null-val { color: var(--muted);
+                                       font-style: italic; }
+  </style>
+</head>
+<body>
+<dl class="casas-frontmatter"><dt>contract_version</dt><dd>1.0</dd><dt>spec_id</dt><dd>spec-7aeea9f3</dd><dt>correlation_id</dt><dd>feat-b7fcdbc2</dd><dt>version</dt><dd>5</dd><dt>parent_id</dt><dd>spec-7aeea9f3@4</dd><dt>acms_verdict</dt><dd>compliant</dd><dt>created_by</dt><dd>mehrasaiyam</dd><dt>created_at</dt><dd>2026-07-24T15:06:58Z</dd><dt>service</dt><dd>Connectivity Service (Horizon v2)</dd><dt>intent_kind</dt><dd>new_feature</dd><dt>approver</dt><dd class="null-val">null</dd><dt>approved</dt><dd class="null-val">null</dd></dl>
+<h1 id="spec-customer-connectivity-score-endpoint">Spec: Customer connectivity score endpoint</h1>
+<h2 id="problem">Problem</h2>
+<p>Operators and care agents need a single, at-a-glance measure of an individual customer's recent broadband quality, but the connectivity service exposes no per-customer rollup. It ingests test measurements and surfaces raw records and fleet-level health, so answering "how is this customer's connection doing?" today means inspecting raw speed/latency rows or fleet dashboards. There is no way to get a single bounded score and a plain-language status for one customer over their recent measurement history.</p>
+<h2 id="users">Users</h2>
+<ul>
+<li>Care agents and operator support staff who need a quick, plain-language verdict on a specific customer's connection quality during a support interaction.</li>
+<li>Operator-facing systems and dashboards that display or triage individual customer connection health and need a single score to drive that view.</li>
+<li>Downstream automation (alerting, prioritisation) that acts on a customer's current connectivity standing.</li>
+</ul>
+<h2 id="outcomes">Outcomes</h2>
+<ul>
+<li>A caller can request the connectivity score for a given customer identifier and receives a numeric score in the range 0-100 together with a status label.</li>
+<li>The status label is exactly one of four values - excellent, good, degraded, critical - derived from the score using upper-inclusive bands: score &gt;= 80 is excellent, 60 &lt;= score &lt; 80 is good, 40 &lt;= score &lt; 60 is degraded, and score &lt; 40 is critical.</li>
+<li>The score reflects only measurements whose test time falls within the trailing 30-day window ending at the time of the request; measurements older than 30 days do not influence it.</li>
+<li>The score is a weighted combination of the customer's download speed, upload speed, and latency, weighted 50%, 30%, and 20% respectively.</li>
+<li>Each of the three metrics is normalised to a 0-100 sub-score based on measured performance relative to the customer's provisioned service level for the speed metrics and relative to a latency target for the latency metric, so a customer meeting their provisioned service scores near the top of the range regardless of their plan tier.</li>
+<li>When the window contains some but not all three metric types, the score is computed from the metric types actually present, with the weights redistributed proportionally across the available metrics.</li>
+<li>When no measurements of any type exist for the customer within the 30-day window, the request returns a 404 not-found response identifying the customer, rather than a score.</li>
+<li>For the same customer, window, and underlying measurement data, repeated requests return the same score and status (the computation is deterministic).</li>
+<li>The response conveys the customer identifier, the score, the status, the window it covers, and the per-metric sub-scores together with how many measurements each sub-score is based on, so a caller can interpret and justify the score without a second request.</li>
+<li>The endpoint enforces the same authentication and rate-limiting regime as the service's existing read endpoints, introducing no weaker access path to customer measurement data.</li>
+<li>Under expected load the endpoint meets a p95 response-time budget of under 1 second and a p99 of under 2 seconds, inclusive of the 30-day measurement aggregation.</li>
+<li>A request resolves only measurements belonging to the requester's own operator/market context; data belonging to another operator is never returned or allowed to influence a customer's score, even if a customer identifier were to collide across operators.</li>
+<li>The endpoint returns only derived and aggregate values (the score, status, per-metric sub-scores, measurement counts, the supplied customer identifier, and the window); it exposes no raw underlying measurement records and no additional personal data about the customer beyond the identifier the caller supplied.</li>
+<li>The customer identifier is treated as an opaque token supplied by the caller; the endpoint's response leaks no internal operator identifiers, device or line identifiers, or identifiers belonging to any other operator.</li>
+</ul>
+<h2 id="out-of-scope">Out of scope</h2>
+<ul>
+<li>Discovering the network topology behind a customer - i.e. resolving which probe, device, or line a customer maps to - via an external identity or inventory service. The endpoint operates only on measurements already tagged with the supplied customer identifier; it does not thereby waive the data-governance obligations that apply to handling that identifier and its data.</li>
+<li>Changing how SamKnows measurements are ingested, enriched, or tagged with a customer identifier.</li>
+<li>Historical trends, time-series, or per-day score breakdowns - the endpoint returns a single current rollup only.</li>
+<li>Scoring metric types other than download speed, upload speed, and latency (for example jitter, packet loss, MOS, or disconnection events).</li>
+<li>Any UI, dashboard, or visualisation surface for the score - this is an API-only capability.</li>
+<li>Caller-tunable weights or band thresholds - the weighting and banding are fixed by this specification, not configurable per request.</li>
+<li>Ranking or comparing customers against one another or against a fleet-wide distribution.</li>
+</ul>
+<h2 id="business-context">Business context</h2>
+<ul>
+<li>(nugget:9265286c-625f-4c02-bb76-7aa555240c8a [external:casas-architecture]) No 0-100 numeric scoring scale is defined anywhere in CASAS. The closest existing pattern is the Consumer Experience Mapping on the CNX Speed Test Evaluation Platform, which classifies raw metrics (download Mbps, RTT ms, jitter, packet loss) into three threshold-based indicator states — good (green tick), marginal (amber), or insufficient (red cross) — across five application categories (Streaming, Gaming, Video Calls, Social Media, Audio &amp; Voice), with no numeric band or weighted aggregate defined. Relevance: Answers spec question: How are raw broadband measurements (download/upload Mbps, latency ms) normalized onto a 0-100 quality scale anywhere in CASAS? Any reference thresholds, target throughput values, or scoring bands?</li>
+<li>(nugget:bd18e25f-010a-4452-a249-399e16cf1a91 [external:casas-architecture]; nugget:e807a967-3cf6-4ff1-a865-f954621298ae [external:horizon-v2-microservices]; nugget:69c969e3-b795-474e-b575-085ba9477dc4 [external:casas-architecture]) The authoritative customer identifier in the platform is minted by the CRM/Account Service. In the connectivity service's measurement store, probe and CPE records (customer ID, hardware type, service tier) are sourced from a separate identity resolution service in the target architecture; the link between a customer identifier and a probe is resolved via that external service rather than being embedded directly in the measurement dataset. Relevance: Answers spec question: What identifies a "customer" in the connectivity data model? Is there a customer_id field, and how does it relate to probes (probe_registry) and the fact tables?</li>
+<li>(nugget:e807a967-3cf6-4ff1-a865-f954621298ae [external:horizon-v2-microservices]; nugget:f1ca10e2-e8a8-4c9b-af6a-733ffd7e72c3 [external:casas-architecture]; nugget:1368a70e-a725-40e9-b2c4-106eab36edc0 [external:horizon-v2-microservices]) Download and upload throughput measurements and latency/RTT measurements are stored in separate fact tables in the connectivity measurement store. All measurement tables support time-bounded queries, making it possible to restrict aggregation to a trailing window such as the last 30 days. Specific field names within those tables are not enumerated in the knowledge base. Relevance: Establishes whether the measurement store already supports time-bounded queries over a trailing window, and which metric categories (throughput, latency) have separate storage structures — context needed to determine whether the 30-day window and per-metric sub-score design are consistent with how measurements are physically available.</li>
+<li>(nugget:d28d3c2a-663f-4c0c-9493-b12ab271c434 [external:horizon-v2-microservices]; nugget:695338a5-b68e-462c-8fa7-a525fffaa619 [external:horizon-v2-microservices]) The connectivity service enforces API key authentication on its /api/v1 endpoints, with authentication enabled in production and disabled in local/development environments. Per-IP rate limiting is also applied. In production, the service sits behind an API gateway that enforces per-operator API key authentication at the gateway tier. Relevance: Answers spec question: Does the connectivity service require API-key authentication (or other auth) on its /api/v1 REST endpoints? What is the auth/permission model?</li>
+<li>(nugget:8e96c34d-5396-4cd7-be94-3d8607e48502 [external:horizon-v2-microservices]; nugget:da51b767-839e-4fec-a623-9cd0faa42ee4 [external:horizon-v2-microservices]; nugget:1b78e00c-8a08-49e2-8db8-05f5cf67e101 [external:horizon-v2-microservices]) The connectivity service has an existing fleet-level health endpoint whose response shape and semantics the new per-customer score endpoint should align with. The service follows a standard error envelope format. The detailed response shape of the existing fleet health endpoint is not recorded in the knowledge base. Relevance: Answers spec question: Are there existing score, health, or quality-rating endpoints in the connectivity service (e.g. /api/v1/fleet/health) whose response shape or semantics this new endpoint should align with?</li>
+<li>(nugget:4ff11db3-05c6-49ad-9d0a-641c42e82227 [external:casas-architecture]; nugget:d100b0b8-b3f4-42b6-b7b0-ce273a38ed17 [external:casas-architecture]) No connectivity-service-specific read latency budget is recorded for measurement-aggregation endpoints. Adjacent targets from the architecture: Touchpoint APIs are targeted at p95 &lt; 500 ms / p99 &lt; 1000 ms / 99.9% uptime; a separate speed-test NFR requires measurement results to be available near real-time after test completion, but sets no read-query response time. Relevance: Answers spec question: Is there a defined latency or performance budget for connectivity REST API read endpoints that query BigQuery?</li>
+</ul>
+<h2 id="compliance-constraints">Compliance constraints</h2>
+<ul>
+<li><code>compliance:gdpr</code> — applies because: The endpoint accepts a customer_id path parameter to return a scored view of that customer's broadband measurements — introducing a customer-identified data access surface subject to GDPR data-handling obligations that apply per OpCo market across all connectivity APIs (CON-004-03, CON-009-005).</li>
+<li><code>compliance:gdpr-data-minimisation</code> — applies because: The Connectivity service's established data profile carries no PII in probe data (device IDs only); this endpoint extends that profile to expose a derived score keyed by customer_id, requiring that only the necessary customer-identifying data is processed over the 30-day window and that no raw or excess personal data is returned.</li>
+<li><code>domain:casas-tcid-abstraction</code> — applies because: A core connectivity principle is that operator customer IDs must never be exposed to third parties via TCId abstraction; the endpoint's use of a customer identifier in the path and response must respect this boundary so internal identifiers are not leaked across OpCo trust domains.</li>
+<li><code>domain:casas-per-opco-data-isolation</code> — applies because: ADR-C020 mandates per-OpCo data isolation for all customer data; the connectivity-score endpoint returns per-customer data that must be scoped and isolated to the originating OpCo market so a query in one market cannot resolve data belonging to another.</li>
+<li><code>compliance:ofcom</code> — applies because: The score is derived from SamKnows broadband measurements, a regulated measurement approach subject to UK Ofcom approval (CON-ST-002, NFR-ST-007); any API surface that surfaces derived outputs from this measurement data inherits the obligation that the underlying measurement methodology is Ofcom-compliant.</li>
+</ul>
+</body>
+</html>

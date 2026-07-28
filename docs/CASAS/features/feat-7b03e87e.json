@@ -1,0 +1,216 @@
+{
+  "feature_id": "feat-7b03e87e",
+  "spec": {
+    "compliance": {
+      "business_context": {},
+      "compliance_constraints": {}
+    },
+    "doc": {
+      "acms_verdict": "pending",
+      "approved": null,
+      "approver": null,
+      "business_context": [
+        {
+          "relevance": "Answers spec question: In the Connectivity service data model, is there a \"customer\" concept, or are broadband test measurements keyed by probe / probe_registry? What field or identifier would a per-customer lookup (customer_id) correspond to?",
+          "source": "nugget:e807a967-3cf6-4ff1-a865-f954621298ae [external:horizon-v2-microservices], nugget:bd18e25f-010a-4452-a249-399e16cf1a91 [external:casas-architecture]",
+          "summary": "The Connectivity service's BigQuery connectivity_metrics dataset uses a probe-centric model: the primary inventory table is probe_registry, and speed-test results carry a probe_id (CPE MAC address) as the measurement key. There is no native customer_id field within the Connectivity service data model itself. In the wider CASAS architecture, customer_id is a canonical identifier minted by the CRM/Account Service (format e.g. CUST-12345) and is resolved via SRAF, which holds the customer-to-CPE-MAC mapping. A per-customer lookup via customer_id would therefore require a join through probe_registry (or SRAF) to resolve the probe_id(s) belonging to that customer \u2014 the Connectivity dataset does not directly key measurements by customer_id."
+        },
+        {
+          "relevance": "Answers spec question: Which BigQuery tables and columns in the connectivity_metrics dataset hold download speed, upload speed, and latency measurements?",
+          "source": "nugget:e807a967-3cf6-4ff1-a865-f954621298ae [external:horizon-v2-microservices], nugget:94485dbd-0f4c-4c68-b389-40ef32e8cf3f [external:casas-architecture]",
+          "summary": "Download and upload throughput (Mbps/Gbps) are stored in fact_iperf3 (TCP/UDP speed test results). Latency/RTT, jitter, and packet loss are stored in fact_obudpst (BBF TR-471). The result JSON envelope carries the canonical column names: download_mbps, upload_mbps, rtt_ms, jitter_ms, packet_loss_pct, and zero_rate_latency_ms. All tables in the connectivity_metrics dataset are partitioned by day. (Note: the local demo slice of this service ingests SamKnows Data Stream test types \u2014 httpget/httppost/udplatency into fact_httpget/fact_httppost/fact_udplatency with speed_mbps, provisioned_mbps, performance_ratio, and rtt_avg_ms columns \u2014 which is the concrete shape the score will read.)"
+        },
+        {
+          "relevance": "Answers spec question: Are there existing target values, reference values, SLA thresholds, or expected performance envelopes for broadband metrics used anywhere in the Connectivity service or CASAS architecture?",
+          "source": "nugget:9265286c-625f-4c02-bb76-7aa555240c8a [external:casas-architecture], nugget:f5eda94a-f91d-480a-bd36-920dd52fbf27 [external:casas-architecture]",
+          "summary": "The KB records threshold-based application-quality indicators (green/amber/red) used in the Consumer Experience Mapping feature of the evaluation platform \u2014 they judge raw metrics against per-application thresholds (e.g. streaming, gaming, video calls, social media) but do not specify named numeric SLA cut-points for download/upload Mbps or latency RTT ms as a single scoring scale. The dashboard also surfaces a 'Performance score' card on the Probe Speed view, and status categories Online/Degraded/Unknown are used in the Fleet Health view. No formally documented numeric SLA thresholds for excellent/good/degraded/critical broadband scoring bands exist in the KB for the Connectivity service specifically."
+        },
+        {
+          "relevance": "Answers spec question: Does the Connectivity API require authentication and is it applied uniformly across all /api/v1 endpoints?",
+          "source": "nugget:d28d3c2a-663f-4c0c-9493-b12ab271c434 [external:horizon-v2-microservices], nugget:da51b767-839e-4fec-a623-9cd0faa42ee4 [external:horizon-v2-microservices]",
+          "summary": "Yes. The Connectivity service uses SHA-256-hashed API keys compared in constant time, with cost-weighted rate limiting applied for AI tools. Authentication is handled by a dedicated security module (services/connectivity/backend/src/connectivity/security/ contains API key auth, a rate limiter, and middleware). The KB records this as the service-wide authentication method for the Connectivity backend, applied uniformly across its /api/v1 surface \u2014 not selectively per endpoint."
+        },
+        {
+          "relevance": "Answers spec question: Is there any existing connectivity/health/quality score concept or endpoint already in the service or wider architecture?",
+          "source": "nugget:f5eda94a-f91d-480a-bd36-920dd52fbf27 [external:casas-architecture], nugget:48b9ba15-e5aa-45d2-b26b-51fd8decf8c0 [external:casas-architecture]",
+          "summary": "The Connectivity service dashboard already surfaces a 'Performance score' card on the Probe Speed view (alongside Avg download/upload Mbps, Failure count, and Avg TCP RTT). The wider CASAS as-is CDEV Speed Test API applies RAG health scoring (Green/Amber/Red) to speed-test results. The evaluation platform's Consumer Experience Mapping translates raw metrics into per-application quality indicators (good/marginal/insufficient). However, none of these is a named, defined 0-100 numeric score endpoint \u2014 they are dashboard display concepts and status labels, not a formally specified scoring API."
+        },
+        {
+          "relevance": "Answers spec question: How does the service handle requests for an unknown entity, and what error response contract do its endpoints follow?",
+          "source": "nugget:1b78e00c-8a08-49e2-8db8-05f5cf67e101 [external:horizon-v2-microservices]",
+          "summary": "All Horizon v2 services \u2014 including the Connectivity service \u2014 follow the CASAS API Design Standard error envelope: a JSON object with an errors array, each entry carrying a message, a code (e.g. NOT_FOUND), and an optional field naming the offending input. HTTP status codes follow REST conventions (4xx for client errors, 5xx for server errors); failure is never signalled inside a 200 body. The Connectivity backend's security/ module also applies authentication middleware, meaning unauthenticated requests are rejected before reaching probe-lookup logic."
+        }
+      ],
+      "compliance_constraints": [],
+      "correlation_id": "feat-7b03e87e",
+      "created_at": "2026-07-24T14:50:35Z",
+      "created_by": "mehrasaiyam",
+      "finalized_at": null,
+      "finalized_version": null,
+      "intent": "Add GET /api/v1/customer/{customer_id}/connectivity-score endpoint to the connectivity service returning a 0-100 score and status from the customer's last 30 days of SamKnows measurements",
+      "intent_kind": "new_feature",
+      "out_of_scope": [
+        "Configurable or alternative scoring windows (anything other than the fixed trailing 30 days).",
+        "Per-application experience scoring (streaming, gaming, video-call, etc.) as in the Consumer Experience Mapping feature.",
+        "Persisting computed scores back to BigQuery or surfacing them in the dashboard UI.",
+        "Real-time or streaming score updates; the score is computed on demand per request.",
+        "Bulk or multi-customer scoring in a single request.",
+        "Defining or changing the customer-to-probe (CPE) identity resolution beyond consuming the customer attribution already present on ingested measurements.",
+        "Incorporating jitter, packet loss, MOS, disconnection, or liveness metrics into the score; only download speed, upload speed, and latency contribute."
+      ],
+      "outcomes": [
+        "A GET request to /api/v1/customer/{customer_id}/connectivity-score for a customer with at least one qualifying measurement in the trailing 30-day window returns a composite connectivity score as an integer in the range 0-100.",
+        "The response includes a status label derived deterministically from the score using fixed bands: 'excellent' when the score is 80 or above, 'good' when 60 to below 80, 'degraded' when 40 to below 60, and 'critical' below 40.",
+        "The composite score is a weighted combination of three components with fixed weights: download speed 50%, upload speed 30%, and latency 20%.",
+        "Each component sub-score expresses performance relative to the customer's provisioned/subscribed service: a customer consistently receiving their provisioned download and upload speed scores at or near 100 on those components, and latency is scored against a fixed target such that meeting or beating the target scores at or near 100 and worse latency scores progressively lower. Component sub-scores are bounded to 0-100.",
+        "Only measurements whose test time falls within the trailing 30-day window, measured relative to the time of the request, contribute to the score; older measurements are excluded.",
+        "The score is attributed to the customer identified by the path parameter, aggregating across all broadband test measurements associated with that customer in the window.",
+        "The 200 response body contains the overall score, the status label, per-component sub-scores for download, upload, and latency, the measurement window used (30 days, with its start and end), and the count of measurements that backed the score.",
+        "When the customer has measurements for only some of the three metric types in the window, the score is computed from the components that are present with the three weights renormalized across only those components, and the response indicates which components were available; the absence of one or two metric types does not by itself cause a not-found response.",
+        "When no qualifying measurement exists for the customer anywhere in the trailing 30-day window, the endpoint responds with HTTP 404 and the CASAS standard error envelope (an 'errors' array whose entry carries a NOT_FOUND code and a human-readable message), rather than a 200 with an empty or zero score.",
+        "For a fixed set of measurements and a fixed request window, the endpoint yields an identical score, status, and component breakdown on repeated calls (the computation is deterministic).",
+        "The endpoint enforces the same authentication as the rest of the service's /api/v1 surface; an unauthenticated or unauthorized request is rejected before any customer lookup or scoring occurs.",
+        "Under expected production load the endpoint returns within a p95 latency budget of 2 seconds."
+      ],
+      "parent_version": 0,
+      "problem": "The Connectivity service already ingests SamKnows broadband test measurements (download speed, upload speed, latency) attributable to each customer into BigQuery, but it exposes no single, normalized indicator of a customer's recent broadband experience. Anyone who needs to answer \"how good is this customer's connectivity right now?\" \u2014 a support agent mid-call, an operations analyst, or a downstream dashboard \u2014 must pull and interpret raw multi-metric time series themselves, with no agreed 0-100 scale or shared status vocabulary. There is no defined connectivity-score API, so the interpretation is ad hoc and inconsistent across consumers.",
+      "project": null,
+      "rejection_reason": null,
+      "service": null,
+      "spec_id": "spec-d03e24b5",
+      "state": "compliance",
+      "title": "Customer connectivity score endpoint",
+      "unsealed_changes": false,
+      "updated_at": "2026-07-24T14:57:29Z",
+      "users": [
+        "VMO2 customer-care / support agents who need an at-a-glance connectivity health indicator for a single customer during a support interaction.",
+        "Network-performance and operations analysts monitoring per-customer broadband experience over recent history.",
+        "Downstream services and dashboards that need a normalized, ready-to-display per-customer connectivity score and status rather than raw measurements."
+      ],
+      "version": 1
+    },
+    "qa": {
+      "answerer": {
+        "subagent_return": {
+          "answers": [
+            {
+              "answer": "The Connectivity service's BigQuery connectivity_metrics dataset uses a probe-centric model: the primary inventory table is probe_registry, and speed-test results carry a probe_id (CPE MAC address) as the measurement key. There is no native customer_id field within the Connectivity service data model itself. In the wider CASAS architecture, customer_id is a canonical identifier minted by the CRM/Account Service (format e.g. CUST-12345) and is resolved via SRAF, which holds the customer-to-CPE-MAC mapping. A per-customer lookup via customer_id would therefore require a join through probe_registry (or SRAF) to resolve the probe_id(s) belonging to that customer \u2014 the Connectivity dataset does not directly key measurements by customer_id.",
+              "found": true,
+              "question": "In the Connectivity service data model, is there a \"customer\" concept, or are broadband test measurements keyed by probe / probe_registry? What field or identifier would a per-customer lookup (customer_id) correspond to?",
+              "source": "nugget:e807a967-3cf6-4ff1-a865-f954621298ae [external:horizon-v2-microservices], nugget:bd18e25f-010a-4452-a249-399e16cf1a91 [external:casas-architecture]"
+            },
+            {
+              "answer": "Download and upload throughput (Mbps/Gbps) are stored in fact_iperf3 (TCP/UDP speed test results). Latency/RTT, jitter, and packet loss are stored in fact_obudpst (BBF TR-471). The result JSON envelope carries the canonical column names: download_mbps, upload_mbps, rtt_ms, jitter_ms, packet_loss_pct, and zero_rate_latency_ms. All tables in the connectivity_metrics dataset are partitioned by day.",
+              "found": true,
+              "question": "Which BigQuery tables and columns in the connectivity_metrics dataset hold download speed, upload speed, and latency measurements? (e.g. fact_iperf3 for throughput, fact_obudpst for latency/jitter/loss)",
+              "source": "nugget:e807a967-3cf6-4ff1-a865-f954621298ae [external:horizon-v2-microservices], nugget:94485dbd-0f4c-4c68-b389-40ef32e8cf3f [external:casas-architecture]"
+            },
+            {
+              "answer": "The KB records threshold-based application-quality indicators (green/amber/red) used in the Consumer Experience Mapping feature of the evaluation platform \u2014 they judge raw metrics against per-application thresholds (e.g. streaming, gaming, video calls, social media) but do not specify named numeric SLA cut-points for download/upload Mbps or latency RTT ms as a single scoring scale. The dashboard also surfaces a 'Performance score' card on the Probe Speed view, and status categories Online/Degraded/Unknown are used in the Fleet Health view. No formally documented numeric SLA thresholds for excellent/good/degraded/critical broadband scoring bands exist in the KB for the Connectivity service specifically.",
+              "found": true,
+              "question": "Are there any existing target values, reference values, SLA thresholds, or expected performance envelopes for broadband download speed, upload speed, or latency used anywhere in the Connectivity service or CASAS architecture (for scoring, health, or dashboards)?",
+              "source": "nugget:9265286c-625f-4c02-bb76-7aa555240c8a [external:casas-architecture], nugget:f5eda94a-f91d-480a-bd36-920dd52fbf27 [external:casas-architecture]"
+            },
+            {
+              "answer": "Yes. The Connectivity service uses SHA-256-hashed API keys compared in constant time, with cost-weighted rate limiting applied for AI tools. Authentication is handled by a dedicated security module (services/connectivity/backend/src/connectivity/security/ contains API key auth, a rate limiter, and middleware). The KB records this as the service-wide authentication method for the Connectivity backend, applied uniformly across its /api/v1 surface \u2014 not selectively per endpoint.",
+              "found": true,
+              "question": "Does the Connectivity API require authentication (e.g. API key auth) and is that auth applied uniformly across all /api/v1 endpoints?",
+              "source": "nugget:d28d3c2a-663f-4c0c-9493-b12ab271c434 [external:horizon-v2-microservices], nugget:da51b767-839e-4fec-a623-9cd0faa42ee4 [external:horizon-v2-microservices]"
+            },
+            {
+              "answer": "The Connectivity service dashboard already surfaces a 'Performance score' card on the Probe Speed view (alongside Avg download/upload Mbps, Failure count, and Avg TCP RTT). The wider CASAS as-is CDEV Speed Test API applies RAG health scoring (Green/Amber/Red) to speed-test results. The evaluation platform's Consumer Experience Mapping translates raw metrics into per-application quality indicators (good/marginal/insufficient). However, none of these is a named, defined 0-100 numeric score endpoint \u2014 they are dashboard display concepts and status labels, not a formally specified scoring API.",
+              "found": true,
+              "question": "Is there any existing connectivity score, health score, quality score, or derived performance-index concept or endpoint already in the Connectivity service or the wider CASAS/SamKnows architecture?",
+              "source": "nugget:f5eda94a-f91d-480a-bd36-920dd52fbf27 [external:casas-architecture], nugget:48b9ba15-e5aa-45d2-b26b-51fd8decf8c0 [external:casas-architecture]"
+            },
+            {
+              "answer": null,
+              "found": false,
+              "question": "What latency or performance budget do existing Connectivity read/query API endpoints (e.g. /api/v1/fleet/health) target, given they read from BigQuery?",
+              "source": null
+            },
+            {
+              "answer": "All Horizon v2 services \u2014 including the Connectivity service \u2014 follow the CASAS API Design Standard error envelope: a JSON object with an errors array, each entry carrying a message, a code (e.g. NOT_FOUND), and an optional field naming the offending input. HTTP status codes follow REST conventions (4xx for client errors, 5xx for server errors); failure is never signalled inside a 200 body. The Connectivity backend's security/ module also applies authentication middleware, meaning unauthenticated requests are rejected before reaching probe-lookup logic.",
+              "found": true,
+              "question": "How does the Connectivity service currently handle API requests for an unknown/nonexistent probe or entity, and what error response contract (status codes, body shape) do its endpoints follow?",
+              "source": "nugget:1b78e00c-8a08-49e2-8db8-05f5cf67e101 [external:horizon-v2-microservices]"
+            }
+          ],
+          "mcp_reachable": true,
+          "tool_calls_made": 8
+        }
+      }
+    },
+    "reviewer_input": {
+      "spec_body": {
+        "body": {
+          "business_context": [
+            {
+              "relevance": "Answers spec question: In the Connectivity service data model, is there a \"customer\" concept, or are broadband test measurements keyed by probe / probe_registry? What field or identifier would a per-customer lookup (customer_id) correspond to?",
+              "source": "nugget:e807a967-3cf6-4ff1-a865-f954621298ae [external:horizon-v2-microservices], nugget:bd18e25f-010a-4452-a249-399e16cf1a91 [external:casas-architecture]",
+              "summary": "The Connectivity service's BigQuery connectivity_metrics dataset uses a probe-centric model: the primary inventory table is probe_registry, and speed-test results carry a probe_id (CPE MAC address) as the measurement key. There is no native customer_id field within the Connectivity service data model itself. In the wider CASAS architecture, customer_id is a canonical identifier minted by the CRM/Account Service (format e.g. CUST-12345) and is resolved via SRAF, which holds the customer-to-CPE-MAC mapping. A per-customer lookup via customer_id would therefore require a join through probe_registry (or SRAF) to resolve the probe_id(s) belonging to that customer \u2014 the Connectivity dataset does not directly key measurements by customer_id."
+            },
+            {
+              "relevance": "Answers spec question: Which BigQuery tables and columns in the connectivity_metrics dataset hold download speed, upload speed, and latency measurements?",
+              "source": "nugget:e807a967-3cf6-4ff1-a865-f954621298ae [external:horizon-v2-microservices], nugget:94485dbd-0f4c-4c68-b389-40ef32e8cf3f [external:casas-architecture]",
+              "summary": "Download and upload throughput (Mbps/Gbps) are stored in fact_iperf3 (TCP/UDP speed test results). Latency/RTT, jitter, and packet loss are stored in fact_obudpst (BBF TR-471). The result JSON envelope carries the canonical column names: download_mbps, upload_mbps, rtt_ms, jitter_ms, packet_loss_pct, and zero_rate_latency_ms. All tables in the connectivity_metrics dataset are partitioned by day. (Note: the local demo slice of this service ingests SamKnows Data Stream test types \u2014 httpget/httppost/udplatency into fact_httpget/fact_httppost/fact_udplatency with speed_mbps, provisioned_mbps, performance_ratio, and rtt_avg_ms columns \u2014 which is the concrete shape the score will read.)"
+            },
+            {
+              "relevance": "Answers spec question: Are there existing target values, reference values, SLA thresholds, or expected performance envelopes for broadband metrics used anywhere in the Connectivity service or CASAS architecture?",
+              "source": "nugget:9265286c-625f-4c02-bb76-7aa555240c8a [external:casas-architecture], nugget:f5eda94a-f91d-480a-bd36-920dd52fbf27 [external:casas-architecture]",
+              "summary": "The KB records threshold-based application-quality indicators (green/amber/red) used in the Consumer Experience Mapping feature of the evaluation platform \u2014 they judge raw metrics against per-application thresholds (e.g. streaming, gaming, video calls, social media) but do not specify named numeric SLA cut-points for download/upload Mbps or latency RTT ms as a single scoring scale. The dashboard also surfaces a 'Performance score' card on the Probe Speed view, and status categories Online/Degraded/Unknown are used in the Fleet Health view. No formally documented numeric SLA thresholds for excellent/good/degraded/critical broadband scoring bands exist in the KB for the Connectivity service specifically."
+            },
+            {
+              "relevance": "Answers spec question: Does the Connectivity API require authentication and is it applied uniformly across all /api/v1 endpoints?",
+              "source": "nugget:d28d3c2a-663f-4c0c-9493-b12ab271c434 [external:horizon-v2-microservices], nugget:da51b767-839e-4fec-a623-9cd0faa42ee4 [external:horizon-v2-microservices]",
+              "summary": "Yes. The Connectivity service uses SHA-256-hashed API keys compared in constant time, with cost-weighted rate limiting applied for AI tools. Authentication is handled by a dedicated security module (services/connectivity/backend/src/connectivity/security/ contains API key auth, a rate limiter, and middleware). The KB records this as the service-wide authentication method for the Connectivity backend, applied uniformly across its /api/v1 surface \u2014 not selectively per endpoint."
+            },
+            {
+              "relevance": "Answers spec question: Is there any existing connectivity/health/quality score concept or endpoint already in the service or wider architecture?",
+              "source": "nugget:f5eda94a-f91d-480a-bd36-920dd52fbf27 [external:casas-architecture], nugget:48b9ba15-e5aa-45d2-b26b-51fd8decf8c0 [external:casas-architecture]",
+              "summary": "The Connectivity service dashboard already surfaces a 'Performance score' card on the Probe Speed view (alongside Avg download/upload Mbps, Failure count, and Avg TCP RTT). The wider CASAS as-is CDEV Speed Test API applies RAG health scoring (Green/Amber/Red) to speed-test results. The evaluation platform's Consumer Experience Mapping translates raw metrics into per-application quality indicators (good/marginal/insufficient). However, none of these is a named, defined 0-100 numeric score endpoint \u2014 they are dashboard display concepts and status labels, not a formally specified scoring API."
+            },
+            {
+              "relevance": "Answers spec question: How does the service handle requests for an unknown entity, and what error response contract do its endpoints follow?",
+              "source": "nugget:1b78e00c-8a08-49e2-8db8-05f5cf67e101 [external:horizon-v2-microservices]",
+              "summary": "All Horizon v2 services \u2014 including the Connectivity service \u2014 follow the CASAS API Design Standard error envelope: a JSON object with an errors array, each entry carrying a message, a code (e.g. NOT_FOUND), and an optional field naming the offending input. HTTP status codes follow REST conventions (4xx for client errors, 5xx for server errors); failure is never signalled inside a 200 body. The Connectivity backend's security/ module also applies authentication middleware, meaning unauthenticated requests are rejected before reaching probe-lookup logic."
+            }
+          ],
+          "compliance_constraints": [],
+          "intent_kind": "new_feature",
+          "out_of_scope": [
+            "Configurable or alternative scoring windows (anything other than the fixed trailing 30 days).",
+            "Per-application experience scoring (streaming, gaming, video-call, etc.) as in the Consumer Experience Mapping feature.",
+            "Persisting computed scores back to BigQuery or surfacing them in the dashboard UI.",
+            "Real-time or streaming score updates; the score is computed on demand per request.",
+            "Bulk or multi-customer scoring in a single request.",
+            "Defining or changing the customer-to-probe (CPE) identity resolution beyond consuming the customer attribution already present on ingested measurements.",
+            "Incorporating jitter, packet loss, MOS, disconnection, or liveness metrics into the score; only download speed, upload speed, and latency contribute."
+          ],
+          "outcomes": [
+            "A GET request to /api/v1/customer/{customer_id}/connectivity-score for a customer with at least one qualifying measurement in the trailing 30-day window returns a composite connectivity score as an integer in the range 0-100.",
+            "The response includes a status label derived deterministically from the score using fixed bands: 'excellent' when the score is 80 or above, 'good' when 60 to below 80, 'degraded' when 40 to below 60, and 'critical' below 40.",
+            "The composite score is a weighted combination of three components with fixed weights: download speed 50%, upload speed 30%, and latency 20%.",
+            "Each component sub-score expresses performance relative to the customer's provisioned/subscribed service: a customer consistently receiving their provisioned download and upload speed scores at or near 100 on those components, and latency is scored against a fixed target such that meeting or beating the target scores at or near 100 and worse latency scores progressively lower. Component sub-scores are bounded to 0-100.",
+            "Only measurements whose test time falls within the trailing 30-day window, measured relative to the time of the request, contribute to the score; older measurements are excluded.",
+            "The score is attributed to the customer identified by the path parameter, aggregating across all broadband test measurements associated with that customer in the window.",
+            "The 200 response body contains the overall score, the status label, per-component sub-scores for download, upload, and latency, the measurement window used (30 days, with its start and end), and the count of measurements that backed the score.",
+            "When the customer has measurements for only some of the three metric types in the window, the score is computed from the components that are present with the three weights renormalized across only those components, and the response indicates which components were available; the absence of one or two metric types does not by itself cause a not-found response.",
+            "When no qualifying measurement exists for the customer anywhere in the trailing 30-day window, the endpoint responds with HTTP 404 and the CASAS standard error envelope (an 'errors' array whose entry carries a NOT_FOUND code and a human-readable message), rather than a 200 with an empty or zero score.",
+            "For a fixed set of measurements and a fixed request window, the endpoint yields an identical score, status, and component breakdown on repeated calls (the computation is deterministic).",
+            "The endpoint enforces the same authentication as the rest of the service's /api/v1 surface; an unauthenticated or unauthorized request is rejected before any customer lookup or scoring occurs.",
+            "Under expected production load the endpoint returns within a p95 latency budget of 2 seconds."
+          ],
+          "problem": "The Connectivity service already ingests SamKnows broadband test measurements (download speed, upload speed, latency) attributable to each customer into BigQuery, but it exposes no single, normalized indicator of a customer's recent broadband experience. Anyone who needs to answer \"how good is this customer's connectivity right now?\" \u2014 a support agent mid-call, an operations analyst, or a downstream dashboard \u2014 must pull and interpret raw multi-metric time series themselves, with no agreed 0-100 scale or shared status vocabulary. There is no defined connectivity-score API, so the interpretation is ad hoc and inconsistent across consumers.",
+          "title": "Customer connectivity score endpoint",
+          "users": [
+            "VMO2 customer-care / support agents who need an at-a-glance connectivity health indicator for a single customer during a support interaction.",
+            "Network-performance and operations analysts monitoring per-customer broadband experience over recent history.",
+            "Downstream services and dashboards that need a normalized, ready-to-display per-customer connectivity score and status rather than raw measurements."
+          ]
+        }
+      }
+    }
+  },
+  "spec_id": "spec-d03e24b5"
+}

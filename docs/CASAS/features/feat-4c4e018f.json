@@ -1,0 +1,37 @@
+{
+  "feature_id": "feat-4c4e018f",
+  "spec": {
+    "doc": {
+      "acms_verdict": null,
+      "approved": null,
+      "approver": null,
+      "business_context": [],
+      "compliance_constraints": [],
+      "correlation_id": "feat-4c4e018f",
+      "created_at": "2026-07-24T15:03:23Z",
+      "created_by": "mehrasaiyam",
+      "finalized_at": null,
+      "finalized_version": null,
+      "intent": "Add GET /api/v1/customer/{customer_id}/connectivity-score to the connectivity service returning a 0-100 score and status (excellent/good/degraded/critical) from the customer's last 30 days of SamKnows measurements; 404 when none exist",
+      "intent_kind": null,
+      "out_of_scope": [],
+      "outcomes": [],
+      "parent_version": null,
+      "problem": "",
+      "project": null,
+      "rejection_reason": null,
+      "service": "Connectivity Service (Horizon v2)",
+      "spec_id": "spec-d4453aae",
+      "state": "qa",
+      "title": "",
+      "unsealed_changes": false,
+      "updated_at": "2026-07-24T15:04:20Z",
+      "users": [],
+      "version": null
+    },
+    "qa": {
+      "answerer": {}
+    }
+  },
+  "spec_id": "spec-d4453aae"
+}

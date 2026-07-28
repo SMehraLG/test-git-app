@@ -1,0 +1,22 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "smoke-python"
+version = "0.1.0"
+description = "Python smoke service for the agentic factory monorepo."
+requires-python = ">=3.13"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=5.0.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/smoke_python"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

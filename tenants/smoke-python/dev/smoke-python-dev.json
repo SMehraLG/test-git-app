@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "1.0",
+  "service": "smoke-python",
+  "environment": "dev",
+  "project_id": "prj-d-srdl-casas-4zrs",
+  "region": "europe-west2",
+
+  "artifact_registry": {
+    "images": { "format": "DOCKER" }
+  },
+
+  "cloud_run": {
+    "api": {
+      "image": "gcr.io/cloudrun/hello",
+      "port": 8080,
+      "cpu": "1",
+      "memory": "256Mi",
+      "min_instances": 1,
+      "max_instances": 3,
+      "public_access": true,
+      "env": {
+        "SERVICE_NAME": "smoke-python",
+        "LOG_LEVEL": "INFO"
+      }
+    }
+  }
+}
