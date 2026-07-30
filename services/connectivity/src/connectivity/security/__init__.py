@@ -1,1 +1,1 @@
-"""Connectivity security layer."""
+"""Security utilities for the Connectivity service."""

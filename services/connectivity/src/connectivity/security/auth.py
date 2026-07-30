@@ -6,8 +6,8 @@ comparison against the SHA-256 digest of the configured key, so the secret is
 never held in memory as a plain-text comparison target and timing side-channels
 are eliminated.
 
-When ``CONNECTIVITY_API_KEY_ENABLED=false`` (the default for local dev and
-tests) the dependency is a no-op and returns an unconstrained :class:`TenantScope`.
+When ``CONNECTIVITY_API_KEY_ENABLED=false`` (set in tests via conftest) the
+dependency is a no-op and returns an unconstrained :class:`TenantScope`.
 """
 
 import hashlib
@@ -27,7 +27,7 @@ _api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 @dataclass(frozen=True, slots=True)
 class TenantScope:
-    """Authorized country / operator / brand scope resolved from the API key."""
+    """Authorised country / operator / brand scope resolved from the API key."""
 
     country: str
     operator: str

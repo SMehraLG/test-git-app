@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     rate_limit_enabled: bool = False
 
     # API-key auth — load from environment / Secret Manager, never hardcode values
-    api_key_enabled: bool = False
+    api_key_enabled: bool = True
     api_key: SecretStr = Field(default=SecretStr(""))
     # Tenant scope bound to the key; populated from env / Secret Manager
     api_key_country: str = ""
