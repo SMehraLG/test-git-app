@@ -28,7 +28,7 @@ from connectivity.config.settings import Settings, get_settings
 from connectivity.dependencies import get_bq_adapter
 from connectivity.scoring.bands import score_to_band
 from connectivity.scoring.composite import composite_score
-from connectivity.security.auth import CallerScope, require_api_key
+from connectivity.security.auth import require_api_key
 
 SCORE_URL = "/api/v1/customers/cust-123/connectivity-score"
 
@@ -100,9 +100,7 @@ class TestWeightRedistribution:
 
 class TestScoringDeterminism:
     def test_composite_deterministic(self) -> None:
-        results = [
-            composite_score(download=72.5, upload=45.3, latency=88.1) for _ in range(10)
-        ]
+        results = [composite_score(download=72.5, upload=45.3, latency=88.1) for _ in range(10)]
         assert len(set(results)) == 1
 
     def test_band_deterministic(self) -> None:
