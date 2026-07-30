@@ -18,10 +18,11 @@ from connectivity.models.scheduled import (
     UdpJitterRecord,
     UdpLatencyRecord,
 )
+from connectivity.security.auth import require_api_key
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(prefix="/api/v1")
+router = APIRouter(prefix="/api/v1", dependencies=[Depends(require_api_key)])
 
 TEST_TYPE_MODELS: dict[str, type[BaseModel]] = {
     "httpget": HttpGetRecord,

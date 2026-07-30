@@ -19,6 +19,14 @@ class Settings(BaseSettings):
     host: str = "0.0.0.0"
     port: int = Field(default=8001, ge=1, le=65535)
 
+    # API-key auth — set via env / Secret Manager, never hardcoded literals.
+    # api_key must be the SHA-256 hex digest of the actual service key.
+    api_key_enabled: bool = False
+    api_key: str = Field(default="", description="SHA-256 hex digest of the service API key")
+    api_key_scope_country: str = ""
+    api_key_scope_operator: str = ""
+    api_key_scope_brand: str = ""
+
     bq_adapter: Literal["mock", "bigquery"] = "mock"
     bq_project: str = ""
     bq_dataset: str = ""
