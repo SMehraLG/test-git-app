@@ -1,4 +1,4 @@
-"""GET /api/v1/customer/{customer_id}/connectivity-score endpoint."""
+"""GET /api/v1/customers/{customer_id}/connectivity-score endpoint."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ router = APIRouter(prefix="/api/v1", dependencies=[Depends(require_api_key)])
 
 
 @router.get(
-    "/customer/{customer_id}/connectivity-score",
+    "/customers/{customer_id}/connectivity-score",
     response_model=ConnectivityScoreResponse,
     responses={404: {"model": ErrorResponse}},
 )

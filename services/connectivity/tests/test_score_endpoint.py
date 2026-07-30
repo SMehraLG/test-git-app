@@ -86,7 +86,7 @@ def _stub_adapter(
 
 
 def _score_url(customer_id: str = "cust-123") -> str:
-    return f"/api/v1/customer/{customer_id}/connectivity-score"
+    return f"/api/v1/customers/{customer_id}/connectivity-score"
 
 
 @pytest.fixture
