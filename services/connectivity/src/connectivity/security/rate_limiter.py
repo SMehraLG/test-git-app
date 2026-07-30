@@ -20,18 +20,20 @@ REFILL_RATE: float = 10.0  # tokens per second
 
 
 class _TokenBucket:
-    __slots__ = ("_lock", "_tokens", "_last_refill")
+    __slots__ = ("_lock", "_tokens", "_last_refill", "_capacity", "_refill_rate")
 
-    def __init__(self) -> None:
+    def __init__(self, capacity: int = CAPACITY, refill_rate: float = REFILL_RATE) -> None:
         self._lock = asyncio.Lock()
-        self._tokens: float = float(CAPACITY)
+        self._capacity = float(capacity)
+        self._refill_rate = refill_rate
+        self._tokens: float = float(capacity)
         self._last_refill: float = time.monotonic()
 
     async def consume(self) -> bool:
         async with self._lock:
             now = time.monotonic()
             elapsed = now - self._last_refill
-            self._tokens = min(float(CAPACITY), self._tokens + elapsed * REFILL_RATE)
+            self._tokens = min(self._capacity, self._tokens + elapsed * self._refill_rate)
             self._last_refill = now
             if self._tokens >= 1.0:
                 self._tokens -= 1.0
@@ -44,11 +46,21 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
 
     When `enabled` is False all requests pass through unchanged.
     The client IP is read from X-Forwarded-For (first entry) then request.client.host.
+    Production defaults: CAPACITY=60, REFILL_RATE=10/s.
     """
 
-    def __init__(self, app, *, enabled: bool = True) -> None:
+    def __init__(
+        self,
+        app,
+        *,
+        enabled: bool = True,
+        capacity: int = CAPACITY,
+        refill_rate: float = REFILL_RATE,
+    ) -> None:
         super().__init__(app)
         self.enabled = enabled
+        self._capacity = capacity
+        self._refill_rate = refill_rate
         self._buckets: dict[str, _TokenBucket] = {}
         self._registry_lock = asyncio.Lock()
 
@@ -62,7 +74,7 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
     async def _bucket_for(self, ip: str) -> _TokenBucket:
         async with self._registry_lock:
             if ip not in self._buckets:
-                self._buckets[ip] = _TokenBucket()
+                self._buckets[ip] = _TokenBucket(self._capacity, self._refill_rate)
             return self._buckets[ip]
 
     async def dispatch(self, request: Request, call_next) -> Response:
