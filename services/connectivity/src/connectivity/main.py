@@ -15,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import connectivity.dependencies as deps
 from connectivity.config.settings import get_settings
+from connectivity.security.rate_limiter import RateLimiterMiddleware
 
 logger = structlog.get_logger(__name__)
 
@@ -72,6 +73,8 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    # Rate limiter is outermost (added last) so it runs before CORS processing.
+    app.add_middleware(RateLimiterMiddleware, enabled=settings.rate_limit_enabled)
 
     from connectivity.api.routes.health import router as health_router
     from connectivity.api.routes.ingest import router as ingest_router
