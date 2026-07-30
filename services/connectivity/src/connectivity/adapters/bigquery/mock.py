@@ -1,7 +1,6 @@
 """In-memory mock BigQuery adapter for local development and tests."""
 
 from typing import Any
-import os
 
 import structlog
 from pydantic import BaseModel
