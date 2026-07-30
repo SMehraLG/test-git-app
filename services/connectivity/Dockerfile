@@ -9,6 +9,9 @@ FROM python:3.13-slim
 WORKDIR /srv
 COPY --from=test /srv/src ./src
 COPY pyproject.toml ./
-RUN pip install --no-cache-dir .
+RUN pip install --no-cache-dir . \
+ && addgroup --system --gid 1001 appuser \
+ && adduser --system --uid 1001 --ingroup appuser --no-create-home appuser
 EXPOSE 8001
+USER 1001
 CMD ["uvicorn", "connectivity.main:app", "--host", "0.0.0.0", "--port", "8001"]
