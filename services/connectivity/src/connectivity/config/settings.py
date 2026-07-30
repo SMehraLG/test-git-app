@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     bq_adapter: Literal["mock", "bigquery"] = "mock"
     bq_project: str = ""
     bq_dataset: str = ""
+    bq_dataset_uk: str = ""
+    bq_dataset_eu: str = ""
 
     llm_adapter: Literal["mock"] = "mock"
 
