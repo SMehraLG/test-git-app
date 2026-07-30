@@ -35,6 +35,7 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+markers = ["integration: tests requiring external services"]
 
 [tool.ruff]
 line-length = 100
