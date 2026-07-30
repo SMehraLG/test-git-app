@@ -134,14 +134,10 @@ async def test_different_ips_have_separate_buckets(fresh_app) -> None:
         for _ in range(_TEST_CAP):
             await client.get("/health", headers={"X-Forwarded-For": "10.0.0.1"})
 
-        resp_exhausted = await client.get(
-            "/health", headers={"X-Forwarded-For": "10.0.0.1"}
-        )
+        resp_exhausted = await client.get("/health", headers={"X-Forwarded-For": "10.0.0.1"})
         assert resp_exhausted.status_code == 429
 
-        resp_fresh = await client.get(
-            "/health", headers={"X-Forwarded-For": "10.0.0.2"}
-        )
+        resp_fresh = await client.get("/health", headers={"X-Forwarded-For": "10.0.0.2"})
         assert resp_fresh.status_code == 200
 
 
@@ -152,14 +148,10 @@ async def test_x_forwarded_for_first_hop_used(fresh_app) -> None:
         for _ in range(_TEST_CAP):
             await client.get("/health", headers={"X-Forwarded-For": "1.2.3.4, 5.6.7.8"})
 
-        resp_same = await client.get(
-            "/health", headers={"X-Forwarded-For": "1.2.3.4, 5.6.7.8"}
-        )
+        resp_same = await client.get("/health", headers={"X-Forwarded-For": "1.2.3.4, 5.6.7.8"})
         assert resp_same.status_code == 429
 
-        resp_diff = await client.get(
-            "/health", headers={"X-Forwarded-For": "9.9.9.9, 5.6.7.8"}
-        )
+        resp_diff = await client.get("/health", headers={"X-Forwarded-For": "9.9.9.9, 5.6.7.8"})
         assert resp_diff.status_code == 200
 
 
