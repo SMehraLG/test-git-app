@@ -11,11 +11,11 @@ from connectivity.security.auth import CallerScope, require_api_key
 SECRET = "mysecretkey"
 SECRET_HASH = hashlib.sha256(SECRET.encode()).hexdigest()
 
-_SCOPE_SETTINGS = dict(
-    api_key_scope_country="NL",
-    api_key_scope_operator="ziggo",
-    api_key_scope_brand="ziggo",
-)
+_SCOPE_SETTINGS = {
+    "api_key_scope_country": "NL",
+    "api_key_scope_operator": "ziggo",
+    "api_key_scope_brand": "ziggo",
+}
 
 
 def _settings(**overrides) -> Settings:
