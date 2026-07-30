@@ -3,6 +3,7 @@
 import os
 
 os.environ["CONNECTIVITY_API_KEY_ENABLED"] = "false"
+os.environ["CONNECTIVITY_RATE_LIMIT_ENABLED"] = "false"
 
 import pytest
 from httpx import ASGITransport, AsyncClient

@@ -8,9 +8,12 @@ Response : HTTP 429 with Retry-After: 1 when the bucket is exhausted.
 import asyncio
 import time
 
+import structlog
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
+
+logger = structlog.get_logger(__name__)
 
 CAPACITY: int = 60
 REFILL_RATE: float = 10.0  # tokens per second
@@ -37,10 +40,15 @@ class _TokenBucket:
 
 
 class RateLimiterMiddleware(BaseHTTPMiddleware):
-    """Token-bucket rate limiter keyed by client IP (Horizon v2 security baseline)."""
+    """Token-bucket rate limiter keyed by client IP (Horizon v2 security baseline).
 
-    def __init__(self, app) -> None:
+    When `enabled` is False all requests pass through unchanged.
+    The client IP is read from X-Forwarded-For (first entry) then request.client.host.
+    """
+
+    def __init__(self, app, *, enabled: bool = True) -> None:
         super().__init__(app)
+        self.enabled = enabled
         self._buckets: dict[str, _TokenBucket] = {}
         self._registry_lock = asyncio.Lock()
 
@@ -58,9 +66,13 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
             return self._buckets[ip]
 
     async def dispatch(self, request: Request, call_next) -> Response:
+        if not self.enabled:
+            return await call_next(request)
+
         ip = self._client_ip(request)
         bucket = await self._bucket_for(ip)
         if not await bucket.consume():
+            logger.warning("rate_limit_exceeded", client_ip=ip, path=request.url.path)
             return JSONResponse(
                 status_code=429,
                 content={"detail": "Too Many Requests"},

@@ -61,9 +61,6 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # Rate limiter must be added before CORS so it runs first in the middleware stack.
-    app.add_middleware(RateLimiterMiddleware)
-
     cors_origins = (
         [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
         if settings.cors_origins
@@ -76,6 +73,8 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    # Rate limiter is outermost (added last) so it runs before CORS processing.
+    app.add_middleware(RateLimiterMiddleware, enabled=settings.rate_limit_enabled)
 
     from connectivity.api.routes.health import router as health_router
     from connectivity.api.routes.ingest import router as ingest_router

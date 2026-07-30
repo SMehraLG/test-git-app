@@ -28,6 +28,8 @@ class Settings(BaseSettings):
     cors_origins: str = ""
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
 
+    rate_limit_enabled: bool = False
+
 
 @lru_cache
 def get_settings() -> Settings:

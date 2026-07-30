@@ -1,6 +1,7 @@
 """Tests for per-IP token-bucket rate-limiting middleware."""
 
 import pytest
+from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
 from connectivity.adapters.bigquery.mock import MockBigQueryAdapter
@@ -30,10 +31,16 @@ def _find_rate_middleware(app) -> RateLimiterMiddleware | None:
 
 @pytest.fixture
 def fresh_app(mock_bq: MockBigQueryAdapter, mock_llm: MockLLMAdapter):
-    """Return a freshly constructed app so each test has an empty rate-limiter state."""
-    from connectivity.main import create_app
+    """FastAPI app with RateLimiterMiddleware always enabled for rate-limiter tests.
 
-    application = create_app()
+    Built directly (not via create_app) so the enabled state is independent of the
+    CONNECTIVITY_RATE_LIMIT_ENABLED env var set in conftest.
+    """
+    from connectivity.api.routes.health import router as health_router
+
+    application = FastAPI()
+    application.add_middleware(RateLimiterMiddleware)
+    application.include_router(health_router)
     application.dependency_overrides[get_bq_adapter] = lambda: mock_bq
     application.dependency_overrides[get_llm_adapter] = lambda: mock_llm
     return application
@@ -155,3 +162,18 @@ async def test_tokens_refill_allows_further_requests(fresh_app) -> None:
 
         resp = await client.get("/health")
         assert resp.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_disabled_middleware_allows_all_requests() -> None:
+    """When enabled=False the middleware is a no-op regardless of request count."""
+    from connectivity.api.routes.health import router as health_router
+
+    disabled_app = FastAPI()
+    disabled_app.add_middleware(RateLimiterMiddleware, enabled=False)
+    disabled_app.include_router(health_router)
+
+    async with _make_client(disabled_app) as client:
+        for _ in range(CAPACITY + 10):
+            resp = await client.get("/health")
+            assert resp.status_code == 200
