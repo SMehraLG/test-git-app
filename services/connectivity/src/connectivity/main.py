@@ -73,6 +73,15 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    from connectivity.security import RateLimitMiddleware
+
+    app.add_middleware(
+        RateLimitMiddleware,
+        capacity=settings.rate_limit_capacity,
+        refill_rate=settings.rate_limit_refill_rate,
+        enabled=settings.rate_limit_enabled,
+    )
+
     from connectivity.api.routes.health import router as health_router
     from connectivity.api.routes.ingest import router as ingest_router
 
