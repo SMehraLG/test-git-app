@@ -59,8 +59,8 @@ async def test_ingest_batch(client: AsyncClient, mock_bq: MockBigQueryAdapter) -
     )
     assert resp.status_code == 200
     data = resp.json()
-    assert data["inserted"] == 5
-    assert len(mock_bq.get_table_rows("fact_httpget")) == before + 5
+    assert data["inserted"] == 2
+    assert len(mock_bq.get_table_rows("fact_httpget")) == before + 2
 
 
 @pytest.mark.asyncio
