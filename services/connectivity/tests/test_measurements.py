@@ -140,7 +140,6 @@ class TestDownloadAggregate:
         params = adapter.query.call_args[0][1]
         assert params["customer_id"] == "cust-xyz"
 
-
     async def test_returns_none_when_avg_speed_is_null(self) -> None:
         rows = [
             {
