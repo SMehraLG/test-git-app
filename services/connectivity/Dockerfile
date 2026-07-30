@@ -5,7 +5,7 @@ COPY src ./src
 COPY tests ./tests
 RUN pip install --no-cache-dir ".[dev]" && pytest
 
-FROM python:3.13-slim
+FROM python:3.13-slim AS base
 WORKDIR /srv
 COPY --from=test /srv/src ./src
 COPY pyproject.toml ./
