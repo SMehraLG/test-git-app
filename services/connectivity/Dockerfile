@@ -1,11 +1,11 @@
-FROM python:3.13-slim-bookworm AS test
+FROM python:3.13-slim AS test
 WORKDIR /srv
 COPY pyproject.toml ./
 COPY src ./src
 COPY tests ./tests
 RUN pip install --no-cache-dir ".[dev]" && pytest
 
-FROM python:3.13-slim-bookworm AS base
+FROM python:3.13-slim AS base
 WORKDIR /srv
 COPY --from=test /srv/src ./src
 COPY pyproject.toml ./
