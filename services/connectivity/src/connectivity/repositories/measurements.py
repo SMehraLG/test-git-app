@@ -170,6 +170,8 @@ def _parse_speed_rows(rows: list[dict]) -> SpeedAggregate | None:
     count = row.get("sample_count", 0)
     if not count:
         return None
+    if row.get("avg_speed_mbps") is None or row.get("avg_provisioned_mbps") is None:
+        return None
     return SpeedAggregate(
         avg_speed_mbps=float(row["avg_speed_mbps"]),
         avg_provisioned_mbps=float(row["avg_provisioned_mbps"]),
@@ -185,6 +187,8 @@ def _parse_latency_rows(rows: list[dict]) -> LatencyAggregate | None:
     row = rows[0]
     count = row.get("sample_count", 0)
     if not count:
+        return None
+    if row.get("avg_rtt_ms") is None:
         return None
     return LatencyAggregate(
         avg_rtt_ms=float(row["avg_rtt_ms"]),

@@ -141,6 +141,33 @@ class TestDownloadAggregate:
         assert params["customer_id"] == "cust-xyz"
 
 
+    async def test_returns_none_when_avg_speed_is_null(self) -> None:
+        rows = [
+            {
+                "avg_speed_mbps": None,
+                "avg_provisioned_mbps": 100.0,
+                "sample_count": 5,
+                "window_start": datetime(2026, 7, 1, tzinfo=UTC),
+                "window_end": datetime(2026, 7, 30, tzinfo=UTC),
+            }
+        ]
+        repo = MeasurementRepository(_mock_adapter(rows), _settings())
+        assert await repo.get_download_aggregate("cust-1", UK_VM) is None
+
+    async def test_returns_none_when_avg_provisioned_is_null(self) -> None:
+        rows = [
+            {
+                "avg_speed_mbps": 80.0,
+                "avg_provisioned_mbps": None,
+                "sample_count": 5,
+                "window_start": datetime(2026, 7, 1, tzinfo=UTC),
+                "window_end": datetime(2026, 7, 30, tzinfo=UTC),
+            }
+        ]
+        repo = MeasurementRepository(_mock_adapter(rows), _settings())
+        assert await repo.get_download_aggregate("cust-1", UK_VM) is None
+
+
 class TestUploadAggregate:
     async def test_queries_fact_httppost(self) -> None:
         adapter = _mock_adapter()
@@ -192,4 +219,16 @@ class TestLatencyAggregate:
 
     async def test_returns_none_on_empty(self) -> None:
         repo = MeasurementRepository(_mock_adapter([]), _settings())
+        assert await repo.get_latency_aggregate("cust-1", UK_VM) is None
+
+    async def test_returns_none_when_avg_rtt_is_null(self) -> None:
+        rows = [
+            {
+                "avg_rtt_ms": None,
+                "sample_count": 7,
+                "window_start": datetime(2026, 7, 1, tzinfo=UTC),
+                "window_end": datetime(2026, 7, 30, tzinfo=UTC),
+            }
+        ]
+        repo = MeasurementRepository(_mock_adapter(rows), _settings())
         assert await repo.get_latency_aggregate("cust-1", UK_VM) is None
