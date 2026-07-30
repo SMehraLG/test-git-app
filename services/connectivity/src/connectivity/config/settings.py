@@ -28,6 +28,10 @@ class Settings(BaseSettings):
     cors_origins: str = ""
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
 
+    rate_limit_enabled: bool = True
+    rate_limit_capacity: int = Field(default=60, ge=1)
+    rate_limit_refill_rate: float = Field(default=10.0, gt=0)
+
 
 @lru_cache
 def get_settings() -> Settings:
