@@ -1,0 +1,14 @@
+version: 1
+base:
+  dockerfile: Dockerfile
+  target: base
+commands:
+  dep_sync: uv sync --extra dev
+  test: uv run pytest -q --junitxml=reports/junit.xml
+  coverage: uv run pytest -q --cov=. --cov-report=lcov:coverage/lcov.info
+coverage:
+  mode: diff
+  threshold: 80
+artifacts:
+  junit: reports/junit.xml
+  lcov: coverage/lcov.info
