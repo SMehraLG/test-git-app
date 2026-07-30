@@ -10,13 +10,13 @@ class TestScoreToBand:
         "score,expected",
         [
             (100.0, "excellent"),
-            (80.0, "excellent"),   # boundary: higher band wins
+            (80.0, "excellent"),  # boundary: higher band wins
             (79.9, "good"),
             (75.0, "good"),
-            (60.0, "good"),        # boundary: higher band wins
+            (60.0, "good"),  # boundary: higher band wins
             (59.9, "degraded"),
             (50.0, "degraded"),
-            (40.0, "degraded"),    # boundary: higher band wins
+            (40.0, "degraded"),  # boundary: higher band wins
             (39.9, "critical"),
             (20.0, "critical"),
             (0.0, "critical"),
