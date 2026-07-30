@@ -3,7 +3,7 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -29,6 +29,14 @@ class Settings(BaseSettings):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
 
     rate_limit_enabled: bool = False
+
+    # API-key auth — load from environment / Secret Manager, never hardcode values
+    api_key_enabled: bool = True
+    api_key: SecretStr = Field(default=SecretStr(""))
+    # Tenant scope bound to the key; populated from env / Secret Manager
+    api_key_country: str = ""
+    api_key_operator: str = ""
+    api_key_brand: str = ""
 
 
 @lru_cache
