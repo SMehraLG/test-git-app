@@ -45,9 +45,12 @@ def _make_repo(adapter: MockBigQueryAdapter) -> MeasurementRepository:
 # Dataset routing
 # ---------------------------------------------------------------------------
 
+
 class TestResolveDataset:
     def test_uk_routes_to_europe_west2(self) -> None:
-        routing = resolve_dataset(PROJECT, _uk_scope(), uk_dataset=UK_DATASET, eu_dataset=EU_DATASET)
+        routing = resolve_dataset(
+            PROJECT, _uk_scope(), uk_dataset=UK_DATASET, eu_dataset=EU_DATASET
+        )
         assert routing == DatasetRouting(project=PROJECT, dataset=UK_DATASET)
 
     def test_uk_case_insensitive(self) -> None:
@@ -56,11 +59,15 @@ class TestResolveDataset:
         assert routing.dataset == UK_DATASET
 
     def test_eu_routes_to_europe_west1(self) -> None:
-        routing = resolve_dataset(PROJECT, _eu_scope(), uk_dataset=UK_DATASET, eu_dataset=EU_DATASET)
+        routing = resolve_dataset(
+            PROJECT, _eu_scope(), uk_dataset=UK_DATASET, eu_dataset=EU_DATASET
+        )
         assert routing == DatasetRouting(project=PROJECT, dataset=EU_DATASET)
 
     def test_empty_country_routes_to_eu(self) -> None:
-        routing = resolve_dataset(PROJECT, _empty_scope(), uk_dataset=UK_DATASET, eu_dataset=EU_DATASET)
+        routing = resolve_dataset(
+            PROJECT, _empty_scope(), uk_dataset=UK_DATASET, eu_dataset=EU_DATASET
+        )
         assert routing.dataset == EU_DATASET
 
     def test_other_country_routes_to_eu(self) -> None:
@@ -72,6 +79,7 @@ class TestResolveDataset:
 # ---------------------------------------------------------------------------
 # SQL building helpers
 # ---------------------------------------------------------------------------
+
 
 class TestFqn:
     def test_fully_qualified_name(self) -> None:
@@ -117,13 +125,32 @@ class TestTenantFilter:
 # MeasurementRepository — resolve_unit_ids
 # ---------------------------------------------------------------------------
 
+
 class TestResolveUnitIds:
     async def test_returns_unit_ids_for_customer(self) -> None:
         mock = MockBigQueryAdapter()
         mock._tables["dim_cpe"] = [
-            {"unit_id": 100, "customer_id": "CUST-1", "country": "GB", "operator": "vmuk", "brand": "virginmedia"},
-            {"unit_id": 200, "customer_id": "CUST-1", "country": "GB", "operator": "vmuk", "brand": "virginmedia"},
-            {"unit_id": 300, "customer_id": "CUST-2", "country": "GB", "operator": "vmuk", "brand": "virginmedia"},
+            {
+                "unit_id": 100,
+                "customer_id": "CUST-1",
+                "country": "GB",
+                "operator": "vmuk",
+                "brand": "virginmedia",
+            },
+            {
+                "unit_id": 200,
+                "customer_id": "CUST-1",
+                "country": "GB",
+                "operator": "vmuk",
+                "brand": "virginmedia",
+            },
+            {
+                "unit_id": 300,
+                "customer_id": "CUST-2",
+                "country": "GB",
+                "operator": "vmuk",
+                "brand": "virginmedia",
+            },
         ]
         repo = _make_repo(mock)
         ids = await repo.resolve_unit_ids("CUST-1", _uk_scope())
@@ -132,7 +159,13 @@ class TestResolveUnitIds:
     async def test_empty_when_no_match(self) -> None:
         mock = MockBigQueryAdapter()
         mock._tables["dim_cpe"] = [
-            {"unit_id": 100, "customer_id": "CUST-1", "country": "GB", "operator": "vmuk", "brand": "virginmedia"},
+            {
+                "unit_id": 100,
+                "customer_id": "CUST-1",
+                "country": "GB",
+                "operator": "vmuk",
+                "brand": "virginmedia",
+            },
         ]
         repo = _make_repo(mock)
         ids = await repo.resolve_unit_ids("CUST-UNKNOWN", _uk_scope())
@@ -141,8 +174,20 @@ class TestResolveUnitIds:
     async def test_tenant_filter_applied(self) -> None:
         mock = MockBigQueryAdapter()
         mock._tables["dim_cpe"] = [
-            {"unit_id": 100, "customer_id": "CUST-1", "country": "GB", "operator": "vmuk", "brand": "virginmedia"},
-            {"unit_id": 200, "customer_id": "CUST-1", "country": "DE", "operator": "o2de", "brand": "o2"},
+            {
+                "unit_id": 100,
+                "customer_id": "CUST-1",
+                "country": "GB",
+                "operator": "vmuk",
+                "brand": "virginmedia",
+            },
+            {
+                "unit_id": 200,
+                "customer_id": "CUST-1",
+                "country": "DE",
+                "operator": "o2de",
+                "brand": "o2",
+            },
         ]
         repo = _make_repo(mock)
         ids = await repo.resolve_unit_ids("CUST-1", _uk_scope())
@@ -153,13 +198,32 @@ class TestResolveUnitIds:
 # MeasurementRepository — query_30d_metrics
 # ---------------------------------------------------------------------------
 
+
 class TestQuery30dMetrics:
     async def test_returns_rows_for_unit_ids(self) -> None:
         mock = MockBigQueryAdapter()
         mock._tables["fact_httpget"] = [
-            {"unit_id": 100, "bytes_sec": 50000, "country": "GB", "operator": "vmuk", "brand": "virginmedia"},
-            {"unit_id": 200, "bytes_sec": 60000, "country": "GB", "operator": "vmuk", "brand": "virginmedia"},
-            {"unit_id": 999, "bytes_sec": 70000, "country": "GB", "operator": "vmuk", "brand": "virginmedia"},
+            {
+                "unit_id": 100,
+                "bytes_sec": 50000,
+                "country": "GB",
+                "operator": "vmuk",
+                "brand": "virginmedia",
+            },
+            {
+                "unit_id": 200,
+                "bytes_sec": 60000,
+                "country": "GB",
+                "operator": "vmuk",
+                "brand": "virginmedia",
+            },
+            {
+                "unit_id": 999,
+                "bytes_sec": 70000,
+                "country": "GB",
+                "operator": "vmuk",
+                "brand": "virginmedia",
+            },
         ]
         repo = _make_repo(mock)
         rows = await repo.query_30d_metrics("fact_httpget", [100, 200], _uk_scope())
@@ -181,8 +245,20 @@ class TestQuery30dMetrics:
     async def test_tenant_scope_filters_rows(self) -> None:
         mock = MockBigQueryAdapter()
         mock._tables["fact_httppost"] = [
-            {"unit_id": 100, "bytes_sec": 50000, "country": "GB", "operator": "vmuk", "brand": "virginmedia"},
-            {"unit_id": 100, "bytes_sec": 60000, "country": "DE", "operator": "o2de", "brand": "o2"},
+            {
+                "unit_id": 100,
+                "bytes_sec": 50000,
+                "country": "GB",
+                "operator": "vmuk",
+                "brand": "virginmedia",
+            },
+            {
+                "unit_id": 100,
+                "bytes_sec": 60000,
+                "country": "DE",
+                "operator": "o2de",
+                "brand": "o2",
+            },
         ]
         repo = _make_repo(mock)
         rows = await repo.query_30d_metrics("fact_httppost", [100], _uk_scope())
@@ -229,7 +305,9 @@ class TestQuery30dMetrics:
         mock = MockBigQueryAdapter()
         repo = _make_repo(mock)
         for table in ("fact_httpget", "fact_httppost", "fact_udplatency"):
-            mock._tables[table] = [{"unit_id": 1, "country": "GB", "operator": "vmuk", "brand": "virginmedia"}]
+            mock._tables[table] = [
+                {"unit_id": 1, "country": "GB", "operator": "vmuk", "brand": "virginmedia"}
+            ]
             rows = await repo.query_30d_metrics(table, [1], _uk_scope())
             assert len(rows) == 1
 
@@ -238,20 +316,45 @@ class TestQuery30dMetrics:
 # MeasurementRepository — query_all_30d_metrics
 # ---------------------------------------------------------------------------
 
+
 class TestQueryAll30dMetrics:
     async def test_returns_all_tables(self) -> None:
         mock = MockBigQueryAdapter()
         mock._tables["dim_cpe"] = [
-            {"unit_id": 100, "customer_id": "CUST-1", "country": "GB", "operator": "vmuk", "brand": "virginmedia"},
+            {
+                "unit_id": 100,
+                "customer_id": "CUST-1",
+                "country": "GB",
+                "operator": "vmuk",
+                "brand": "virginmedia",
+            },
         ]
         mock._tables["fact_httpget"] = [
-            {"unit_id": 100, "bytes_sec": 50000, "country": "GB", "operator": "vmuk", "brand": "virginmedia"},
+            {
+                "unit_id": 100,
+                "bytes_sec": 50000,
+                "country": "GB",
+                "operator": "vmuk",
+                "brand": "virginmedia",
+            },
         ]
         mock._tables["fact_httppost"] = [
-            {"unit_id": 100, "bytes_sec": 30000, "country": "GB", "operator": "vmuk", "brand": "virginmedia"},
+            {
+                "unit_id": 100,
+                "bytes_sec": 30000,
+                "country": "GB",
+                "operator": "vmuk",
+                "brand": "virginmedia",
+            },
         ]
         mock._tables["fact_udplatency"] = [
-            {"unit_id": 100, "rtt_avg": 15000, "country": "GB", "operator": "vmuk", "brand": "virginmedia"},
+            {
+                "unit_id": 100,
+                "rtt_avg": 15000,
+                "country": "GB",
+                "operator": "vmuk",
+                "brand": "virginmedia",
+            },
         ]
         repo = _make_repo(mock)
         result = await repo.query_all_30d_metrics("CUST-1", _uk_scope())

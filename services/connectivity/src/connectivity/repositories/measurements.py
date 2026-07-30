@@ -30,7 +30,9 @@ class DatasetRouting:
     dataset: str
 
 
-def resolve_dataset(project: str, scope: TenantScope, *, uk_dataset: str, eu_dataset: str) -> DatasetRouting:
+def resolve_dataset(
+    project: str, scope: TenantScope, *, uk_dataset: str, eu_dataset: str
+) -> DatasetRouting:
     """Map tenant scope to the correct regional BigQuery dataset.
 
     UK (country=GB) → europe-west2 dataset.
@@ -102,9 +104,7 @@ class MeasurementRepository:
             eu_dataset=self._eu_dataset,
         )
 
-    async def resolve_unit_ids(
-        self, customer_id: str, scope: TenantScope
-    ) -> list[int]:
+    async def resolve_unit_ids(self, customer_id: str, scope: TenantScope) -> list[int]:
         """Resolve *customer_id* to associated probe/CPE unit IDs.
 
         Uses ``dim_cpe`` in the tenant-routed dataset to look up the
@@ -113,10 +113,7 @@ class MeasurementRepository:
         routing = self._routing(scope)
         table = _fqn(routing, "dim_cpe")
 
-        sql = (
-            f"SELECT DISTINCT unit_id FROM {table} "
-            "WHERE customer_id = @customer_id"
-        )
+        sql = f"SELECT DISTINCT unit_id FROM {table} " "WHERE customer_id = @customer_id"
         params: dict[str, Any] = {"customer_id": customer_id}
 
         tenant_clause, tenant_params = _build_tenant_filter(scope)
@@ -200,7 +197,5 @@ class MeasurementRepository:
 
         results: dict[str, list[dict[str, Any]]] = {}
         for table in _FACT_TABLES:
-            results[table] = await self.query_30d_metrics(
-                table, unit_ids, scope
-            )
+            results[table] = await self.query_30d_metrics(table, unit_ids, scope)
         return results
