@@ -15,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import connectivity.dependencies as deps
 from connectivity.config.settings import get_settings
+from connectivity.security.rate_limiter import RateLimiterMiddleware
 
 logger = structlog.get_logger(__name__)
 
@@ -59,6 +60,9 @@ def create_app() -> FastAPI:
         version="0.1.0",
         lifespan=lifespan,
     )
+
+    # Rate limiter must be added before CORS so it runs first in the middleware stack.
+    app.add_middleware(RateLimiterMiddleware)
 
     cors_origins = (
         [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
