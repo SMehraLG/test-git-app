@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -12,7 +12,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 from connectivity.adapters.bigquery.base import BigQueryAdapter
-from connectivity.config.settings import Settings, get_settings
+from connectivity.config.settings import get_settings
 from connectivity.dependencies import get_bq_adapter
 
 
@@ -26,8 +26,8 @@ def _dl_row(
             "avg_speed_mbps": speed,
             "avg_provisioned_mbps": prov,
             "sample_count": count,
-            "window_start": datetime(2026, 7, 1, tzinfo=timezone.utc),
-            "window_end": datetime(2026, 7, 30, tzinfo=timezone.utc),
+            "window_start": datetime(2026, 7, 1, tzinfo=UTC),
+            "window_end": datetime(2026, 7, 30, tzinfo=UTC),
         }
     ]
 
@@ -42,8 +42,8 @@ def _ul_row(
             "avg_speed_mbps": speed,
             "avg_provisioned_mbps": prov,
             "sample_count": count,
-            "window_start": datetime(2026, 7, 1, tzinfo=timezone.utc),
-            "window_end": datetime(2026, 7, 30, tzinfo=timezone.utc),
+            "window_start": datetime(2026, 7, 1, tzinfo=UTC),
+            "window_end": datetime(2026, 7, 30, tzinfo=UTC),
         }
     ]
 
@@ -56,8 +56,8 @@ def _lat_row(
         {
             "avg_rtt_ms": rtt,
             "sample_count": count,
-            "window_start": datetime(2026, 7, 1, tzinfo=timezone.utc),
-            "window_end": datetime(2026, 7, 30, tzinfo=timezone.utc),
+            "window_start": datetime(2026, 7, 1, tzinfo=UTC),
+            "window_end": datetime(2026, 7, 30, tzinfo=UTC),
         }
     ]
 
@@ -171,9 +171,7 @@ class TestScoreEndpoint:
         assert body["errors"][0]["code"] == "NOT_FOUND"
         assert "cust-123" in body["errors"][0]["message"]
 
-    async def test_partial_metrics_still_returns_score(
-        self, _env_defaults: None
-    ) -> None:
+    async def test_partial_metrics_still_returns_score(self, _env_defaults: None) -> None:
         get_settings.cache_clear()
         from connectivity.main import app
 
@@ -192,9 +190,7 @@ class TestScoreEndpoint:
         assert data["upload"] is None
         assert data["latency"] is None
 
-    async def test_response_contains_no_internal_ids(
-        self, score_client: AsyncClient
-    ) -> None:
+    async def test_response_contains_no_internal_ids(self, score_client: AsyncClient) -> None:
         resp = await score_client.get(_score_url())
         body = resp.json()
         data = body["data"]
@@ -212,9 +208,7 @@ class TestScoreEndpoint:
 
 @pytest.mark.integration
 class TestScoreAuth:
-    async def test_rejects_missing_key_when_enabled(
-        self, _env_defaults: None
-    ) -> None:
+    async def test_rejects_missing_key_when_enabled(self, _env_defaults: None) -> None:
         os.environ["CONNECTIVITY_API_KEY_ENABLED"] = "true"
         key = "test-key-12345"
         os.environ["CONNECTIVITY_API_KEY"] = hashlib.sha256(key.encode()).hexdigest()

@@ -59,9 +59,7 @@ async def compute_score(
     status = score_to_band(score)
 
     window_start, window_end = _resolve_window(download, upload, latency)
-    total_count = sum(
-        m.sample_count for m in (download, upload, latency) if m is not None
-    )
+    total_count = sum(m.sample_count for m in (download, upload, latency) if m is not None)
 
     return ConnectivityScorePayload(
         customer_id=customer_id,
@@ -86,9 +84,7 @@ def _score_speed(
     return MetricScore(sub_score=scorer(ratio), sample_count=agg.sample_count)
 
 
-def _score_latency(
-    agg: LatencyAggregate | None, target_ms: float
-) -> MetricScore | None:
+def _score_latency(agg: LatencyAggregate | None, target_ms: float) -> MetricScore | None:
     if agg is None:
         return None
     return MetricScore(

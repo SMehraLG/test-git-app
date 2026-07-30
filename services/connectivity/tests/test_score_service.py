@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -20,8 +20,8 @@ from connectivity.services.score_service import (
 )
 
 SCOPE = CallerScope(country="UK", operator="virginmedia", brand="vm")
-W_START = datetime(2026, 7, 1, tzinfo=timezone.utc)
-W_END = datetime(2026, 7, 30, tzinfo=timezone.utc)
+W_START = datetime(2026, 7, 1, tzinfo=UTC)
+W_END = datetime(2026, 7, 30, tzinfo=UTC)
 
 
 def _settings(**overrides: Any) -> Settings:
@@ -100,9 +100,15 @@ class TestComputeScore:
         assert result.upload is None
 
     async def test_window_bounds_span_all_metrics(self) -> None:
-        early = datetime(2026, 6, 15, tzinfo=timezone.utc)
-        late = datetime(2026, 7, 30, tzinfo=timezone.utc)
-        dl = SpeedAggregate(80, 100, 5, early, W_END, )
+        early = datetime(2026, 6, 15, tzinfo=UTC)
+        late = datetime(2026, 7, 30, tzinfo=UTC)
+        dl = SpeedAggregate(
+            80,
+            100,
+            5,
+            early,
+            W_END,
+        )
         lat = LatencyAggregate(25, 5, W_START, late)
         repo = _repo(download=dl, latency=lat)
 

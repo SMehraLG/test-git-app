@@ -8,7 +8,7 @@ fact_udplatency with explicit day-partition predicates, tenant
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from connectivity.adapters.bigquery.base import BigQueryAdapter
 from connectivity.config.settings import Settings
@@ -50,16 +50,12 @@ def _qualified_table(project: str, dataset: str, table: str) -> str:
 
 
 def _window_bounds() -> tuple[datetime, datetime]:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     return now - timedelta(days=WINDOW_DAYS), now
 
 
 def _tenant_predicates() -> str:
-    return (
-        "AND country = @country "
-        "AND operator = @operator "
-        "AND brand = @brand "
-    )
+    return "AND country = @country " "AND operator = @operator " "AND brand = @brand "
 
 
 def _tenant_params(scope: CallerScope) -> dict[str, str]:
@@ -94,8 +90,7 @@ class MeasurementRepository:
             f"FROM {table} "
             "WHERE customer_id = @customer_id "
             "AND dtime_utc >= @window_start "
-            "AND dtime_utc < @window_end "
-            + _tenant_predicates()
+            "AND dtime_utc < @window_end " + _tenant_predicates()
         )
 
         params = {
@@ -125,8 +120,7 @@ class MeasurementRepository:
             f"FROM {table} "
             "WHERE customer_id = @customer_id "
             "AND dtime_utc >= @window_start "
-            "AND dtime_utc < @window_end "
-            + _tenant_predicates()
+            "AND dtime_utc < @window_end " + _tenant_predicates()
         )
 
         params = {
@@ -155,8 +149,7 @@ class MeasurementRepository:
             f"FROM {table} "
             "WHERE customer_id = @customer_id "
             "AND dtime_utc >= @window_start "
-            "AND dtime_utc < @window_end "
-            + _tenant_predicates()
+            "AND dtime_utc < @window_end " + _tenant_predicates()
         )
 
         params = {

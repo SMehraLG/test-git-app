@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import AsyncMock
-
-import pytest
 
 from connectivity.config.settings import Settings
 from connectivity.repositories.measurements import (
@@ -64,8 +62,8 @@ class TestDownloadAggregate:
                 "avg_speed_mbps": 80.0,
                 "avg_provisioned_mbps": 100.0,
                 "sample_count": 42,
-                "window_start": datetime(2026, 7, 1, tzinfo=timezone.utc),
-                "window_end": datetime(2026, 7, 30, tzinfo=timezone.utc),
+                "window_start": datetime(2026, 7, 1, tzinfo=UTC),
+                "window_end": datetime(2026, 7, 30, tzinfo=UTC),
             }
         ]
         adapter = _mock_adapter(rows)
@@ -158,8 +156,8 @@ class TestUploadAggregate:
                 "avg_speed_mbps": 20.0,
                 "avg_provisioned_mbps": 25.0,
                 "sample_count": 10,
-                "window_start": datetime(2026, 7, 1, tzinfo=timezone.utc),
-                "window_end": datetime(2026, 7, 30, tzinfo=timezone.utc),
+                "window_start": datetime(2026, 7, 1, tzinfo=UTC),
+                "window_end": datetime(2026, 7, 30, tzinfo=UTC),
             }
         ]
         repo = MeasurementRepository(_mock_adapter(rows), _settings())
@@ -182,8 +180,8 @@ class TestLatencyAggregate:
             {
                 "avg_rtt_ms": 25.0,
                 "sample_count": 30,
-                "window_start": datetime(2026, 7, 1, tzinfo=timezone.utc),
-                "window_end": datetime(2026, 7, 30, tzinfo=timezone.utc),
+                "window_start": datetime(2026, 7, 1, tzinfo=UTC),
+                "window_end": datetime(2026, 7, 30, tzinfo=UTC),
             }
         ]
         repo = MeasurementRepository(_mock_adapter(rows), _settings())
