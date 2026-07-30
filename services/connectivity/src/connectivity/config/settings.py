@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     bq_adapter: Literal["mock", "bigquery"] = "mock"
     bq_project: str = ""
     bq_dataset: str = ""
+    bq_dataset_uk: str = ""
+    bq_dataset_eu: str = ""
+
+    latency_target_ms: float = Field(default=100.0, gt=0)
 
     llm_adapter: Literal["mock"] = "mock"
 

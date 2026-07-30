@@ -84,9 +84,11 @@ def create_app() -> FastAPI:
 
     from connectivity.api.routes.health import router as health_router
     from connectivity.api.routes.ingest import router as ingest_router
+    from connectivity.api.routes.score import router as score_router
 
     app.include_router(health_router)
     app.include_router(ingest_router)
+    app.include_router(score_router)
 
     return app
 
