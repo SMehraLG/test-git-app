@@ -1,19 +1,15 @@
-FROM python:3.13-slim AS test
+FROM python:3.13.13-slim-bookworm AS test
 WORKDIR /srv
-RUN pip install --no-cache-dir uv
-COPY pyproject.toml uv.lock ./
+COPY pyproject.toml ./
 COPY src ./src
 COPY tests ./tests
-ENV UV_SYSTEM_PYTHON=1
-RUN uv sync --frozen --extra dev && pytest
+RUN pip install --no-cache-dir ".[dev]" && pytest
 
-FROM python:3.13-slim AS base
+FROM python:3.13.13-slim-bookworm AS base
 WORKDIR /srv
-RUN pip install --no-cache-dir uv
 COPY --from=test /srv/src ./src
-COPY pyproject.toml uv.lock ./
-ENV UV_SYSTEM_PYTHON=1
-RUN uv sync --frozen --no-dev \
+COPY pyproject.toml ./
+RUN pip install --no-cache-dir . \
     && groupadd --gid 1001 appuser \
     && useradd --uid 1001 --gid 1001 --no-create-home --shell /usr/sbin/nologin appuser \
     && chown -R appuser:appuser /srv
